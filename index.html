@@ -75,6 +75,9 @@
   <div id="quizArea" style="display:none;">
     <div class="progress" id="progress"></div>
     <div class="question" id="question"></div>
+    <button onclick="speakWord()" id="speakBtn" style="background: #28a745; margin-bottom: 10px;">
+      🔊 발음 듣기
+    </button>
     <input id="answerInput" placeholder="정답 입력..." onkeypress="handleKeyPress(event)" />
     <button onclick="checkAnswer()">제출</button>
     <div class="result" id="result"></div>
@@ -282,6 +285,34 @@ function nextQuestion() {
     return;
   }
   showQuestion();
+}
+
+// -----------------------------
+// 음성 발음 (영어 단어만)
+// -----------------------------
+function speakWord() {
+  // 현재 문제가 영어 단어인 경우에만 발음
+  if (!currentQuiz) return;
+  
+  let textToSpeak = "";
+  
+  // 영어 단어를 물어보는 문제인 경우 (한글 뜻 → 영어 답)
+  if (!currentQuiz.isWordMode) {
+    textToSpeak = currentQuiz.originalWord;
+  } 
+  // 한글 뜻을 물어보는 문제인 경우 (영어 단어 → 한글 답)
+  else {
+    textToSpeak = currentQuiz.originalWord;
+  }
+  
+  // 음성 합성
+  const utterance = new SpeechSynthesisUtterance(textToSpeak);
+  utterance.lang = 'en-US'; // 영어 발음
+  utterance.rate = 0.8; // 속도 (0.8 = 조금 느리게)
+  
+  // 발음 실행
+  window.speechSynthesis.cancel(); // 이전 음성 취소
+  window.speechSynthesis.speak(utterance);
 }
 
 // -----------------------------
