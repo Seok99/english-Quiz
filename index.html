@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>나만의 영어단어 퀴즈</title>
+
+  <!-- PWA 설정 -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button, select {
+      font-size: 18px;
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+    button {
+      background: #4a8fff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .question {
+      font-size: 22px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📘 나만의 영어단어 퀴즈</h2>
+
+  <label>문제 개수 선택 (최대 50):</label>
+  <select id="quizCount">
+    <option value="10">10개</option>
+    <option value="20">20개</option>
+    <option value="30">30개</option>
+    <option value="40">40개</option>
+    <option value="50">50개</option>
+  </select>
+
+  <button onclick="startQuiz()">퀴즈 시작</button>
+
+  <div id="quizArea" style="display:none;">
+    <div class="question" id="question"></div>
+    <input id="answerInput" placeholder="정답 입력..." />
+    <button onclick="checkAnswer()">제출</button>
+    <div class="result" id="result"></div>
+    <button onclick="nextQuestion()">다음 문제</button>
+  </div>
+</div>
+
+<script>
+// -----------------------------
+// 영단어 목록
+// -----------------------------
+const WORDS = [
+  { word:"a", meaning:["하나의"] },
+  { word:"about", meaning:["~에 대한", "약", "거의"] },
+  { word:"above", meaning:["~보다 위에"] },
+  { word:"academy", meaning:["학교"] },
+  { word:"accent", meaning:["말씨","강세"] },
+  { word:"accident", meaning:["사고","우연"] },
+  { word:"across", meaning:["건너서","가로질러"] },
+  { word:"act", meaning:["행동하다","행동"] },
+  { word:"add", meaning:["더하다","첨가하다"] },
+  { word:"address", meaning:["주소","주소를 쓰다"] },
+  { word:"adult", meaning:["성인"] },
+  { word:"adventure", meaning:["모험"] },
+  { word:"advise", meaning:["조언하다"] },
+  { word:"afraid", meaning:["두려워하는","겁내는"] },
+  { word:"after", meaning:["후에"] },
+  { word:"afternoon", meaning:["오후"] },
+  { word:"again", meaning:["다시","한 번 더"] },
+  { word:"against", meaning:["~에 반대하여"] },
+  { word:"age", meaning:["나이","연령"] },
+  { word:"ago", meaning:["전에"] },
+  { word:"agree", meaning:["동의하다"] },
+  { word:"ahead", meaning:["앞으로","앞에"] },
+  { word:"air", meaning:["공기"] },
+  { word:"airplane", meaning:["비행기"] },
+  { word:"airline", meaning:["항공사"] },
+  { word:"airport", meaning:["공항"] },
+  { word:"all", meaning:["모든","모두"] },
+  { word:"almost", meaning:["거의"] },
+  { word:"alone", meaning:["혼자","외로운"] },
+  { word:"along", meaning:["~을 따라"] },
+  { word:"aloud", meaning:["소리 내어","크게"] },
+  { word:"already", meaning:["이미","벌써"] },
+  { word:"alright", meaning:["괜찮은"] },
+  { word:"also", meaning:["또한","게다가"] },
+  { word:"always", meaning:["항상"] },
+  { word:"am", meaning:["오전"] },
+  { word:"and", meaning:["그리고"] },
+  { word:"angel", meaning:["천사"] },
+  { word:"anger", meaning:["분노"] },
+  { word:"animal", meaning:["동물"] },
+  { word:"another", meaning:["또 하나의"] },
+  { word:"answer", meaning:["대답","회신"] },
+  { word:"ant", meaning:["개미"] },
+  { word:"any", meaning:["어느","어떤"] },
+  { word:"apple", meaning:["사과"] },
+  { word:"area", meaning:["지역","구역"] },
+  { word:"arm", meaning:["팔"] },
+  { word:"around", meaning:["약","둘레에"] },
+  { word:"arrive", meaning:["도착하다"] },
+  { word:"art", meaning:["미술"] },
+  { word:"as", meaning:["~처럼","~로서"] },
+  { word:"ask", meaning:["묻다","요청하다"] },
+  { word:"at", meaning:["~에"] },
+  { word:"aunt", meaning:["고모","이모","숙모"] },
+  { word:"away", meaning:["떨어져"] },
+  { word:"baby", meaning:["아기"] },
+  { word: "back", meaning: "등, 허리, 뒤쪽의" },
+  { word: "background", meaning: "배경" },
+  { word: "bad", meaning: "나쁜, 안좋은" },
+  { word: "bake", meaning: "굽다" },
+  { word: "ball", meaning: "공" },
+  { word: "balloon", meaning: "풍선" },
+  { word: "band", meaning: "밴드, 띠" },
+  { word: "bank", meaning: "은행, 둑" },
+  { word: "base", meaning: "기초, 토대" },
+  { word: "baseball", meaning: "야구" },
+  { word: "basic", meaning: "기초적인, 근본적인" },
+  { word: "basket", meaning: "바구니" },
+  { word: "basketball", meaning: "농구" },
+  { word: "bat", meaning: "방망이" },
+  { word: "bath", meaning: "욕조" },
+  { word: "bathroom", meaning: "욕실" },
+  { word: "battery", meaning: "배터리" },
+  { word: "battle", meaning: "전투" },
+  { word: "be", meaning: "있다, 이다" },
+  { word: "beach", meaning: "해변" },
+  { word: "bean", meaning: "콩" },
+  { word: "bear", meaning: "곰, 참다, 견디다" },
+  { word: "beauty", meaning: "아름다움" },
+  { word: "because", meaning: "~때문에" },
+
+];
+
+let quizList = [];
+let currentQuiz = null;
+let currentIndex = 0;
+
+// -----------------------------
+// 퀴즈 시작
+// -----------------------------
+function startQuiz() {
+  const count = Number(document.getElementById("quizCount").value);
+
+  // 리스트 섞기
+  quizList = [...WORDS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count)
+    .map(item => {
+      const isWordMode = Math.random() < 0.5;
+      return {
+        question: isWordMode ? item.word : item.meaning.join(", "),
+        answerList: isWordMode ? item.meaning : [item.word],
+        fullMeaning: item.meaning,
+        originalWord: item.word
+      };
+    });
+
+  currentIndex = 0;
+  document.getElementById("quizArea").style.display = "block";
+  showQuestion();
+}
+
+// -----------------------------
+// 문제 출력
+// -----------------------------
+function showQuestion() {
+  currentQuiz = quizList[currentIndex];
+  document.getElementById("question").textContent =
+    `문제 ${currentIndex + 1}: ${currentQuiz.question}`;
+  document.getElementById("answerInput").value = "";
+  document.getElementById("result").innerHTML = "";
+}
+
+// -----------------------------
+// 답안 체크
+// -----------------------------
+function checkAnswer() {
+  const user = document.getElementById("answerInput").value.trim();
+  if (!user) return;
+
+  const result = document.getElementById("result");
+
+  // 정답 조건 (부분일치 허용)
+  const isCorrect = currentQuiz.answerList.some(ans =>
+    ans.includes(user) || user.includes(ans)
+  );
+
+  // 맞춘 실제 뜻만
+  const matchedMeaning = currentQuiz.answerList.filter(ans =>
+    ans.includes(user) || user.includes(ans)
+  );
+
+  // 전체 뜻 중 나머지
+  const otherMeanings = currentQuiz.fullMeaning.filter(
+    m => !matchedMeaning.includes(m)
+  );
+
+  if (isCorrect) {
+    result.innerHTML =
+      `⭕ <b>정답입니다!</b><br>
+      입력한 뜻: ${user}<br>
+      맞는 정답: ${matchedMeaning.join(", ")}<br>
+      다른 뜻들: ${otherMeanings.join(", ")}`;
+  } else {
+    result.innerHTML =
+      `❌ <b>오답입니다.</b><br>
+      입력한 뜻: ${user}<br>
+      정답: ${currentQuiz.answerList.join(", ")}<br>
+      전체 뜻: ${currentQuiz.fullMeaning.join(", ")}`;
+  }
+}
+
+// -----------------------------
+// 다음 문제
+// -----------------------------
+function nextQuestion() {
+  currentIndex++;
+  if (currentIndex >= quizList.length) {
+    alert("퀴즈 완료!");
+    return;
+  }
+  showQuestion();
+}
+
+// -----------------------------
+// PWA service worker 등록
+// -----------------------------
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+</body>
+</html>
