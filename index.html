@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>나만의 영어단어 퀴즈</title>
-
-  <!-- PWA 설정 -->
-  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff">
 
   <style>
@@ -30,12 +27,17 @@
       margin-top: 10px;
       border-radius: 8px;
       border: 1px solid #aaa;
+      box-sizing: border-box;
     }
     button {
       background: #4a8fff;
       color: white;
       font-weight: bold;
       cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background: #3a7fee;
     }
     .question {
       font-size: 22px;
@@ -46,6 +48,11 @@
       margin-top: 20px;
       font-size: 18px;
       white-space: pre-line;
+    }
+    .progress {
+      margin: 10px 0;
+      font-size: 16px;
+      color: #666;
     }
   </style>
 </head>
@@ -66,17 +73,18 @@
   <button onclick="startQuiz()">퀴즈 시작</button>
 
   <div id="quizArea" style="display:none;">
+    <div class="progress" id="progress"></div>
     <div class="question" id="question"></div>
-    <input id="answerInput" placeholder="정답 입력..." />
+    <input id="answerInput" placeholder="정답 입력..." onkeypress="handleKeyPress(event)" />
     <button onclick="checkAnswer()">제출</button>
     <div class="result" id="result"></div>
-    <button onclick="nextQuestion()">다음 문제</button>
+    <button onclick="nextQuestion()" id="nextBtn" style="display:none;">다음 문제</button>
   </div>
 </div>
 
 <script>
 // -----------------------------
-// 영단어 목록
+// 영단어 목록 (모든 meaning을 배열로 통일)
 // -----------------------------
 const WORDS = [
   { word:"a", meaning:["하나의"] },
@@ -135,42 +143,49 @@ const WORDS = [
   { word:"aunt", meaning:["고모","이모","숙모"] },
   { word:"away", meaning:["떨어져"] },
   { word:"baby", meaning:["아기"] },
-  { word: "back", meaning: "등, 허리, 뒤쪽의" },
-  { word: "background", meaning: "배경" },
-  { word: "bad", meaning: "나쁜, 안좋은" },
-  { word: "bake", meaning: "굽다" },
-  { word: "ball", meaning: "공" },
-  { word: "balloon", meaning: "풍선" },
-  { word: "band", meaning: "밴드, 띠" },
-  { word: "bank", meaning: "은행, 둑" },
-  { word: "base", meaning: "기초, 토대" },
-  { word: "baseball", meaning: "야구" },
-  { word: "basic", meaning: "기초적인, 근본적인" },
-  { word: "basket", meaning: "바구니" },
-  { word: "basketball", meaning: "농구" },
-  { word: "bat", meaning: "방망이" },
-  { word: "bath", meaning: "욕조" },
-  { word: "bathroom", meaning: "욕실" },
-  { word: "battery", meaning: "배터리" },
-  { word: "battle", meaning: "전투" },
-  { word: "be", meaning: "있다, 이다" },
-  { word: "beach", meaning: "해변" },
-  { word: "bean", meaning: "콩" },
-  { word: "bear", meaning: "곰, 참다, 견디다" },
-  { word: "beauty", meaning: "아름다움" },
-  { word: "because", meaning: "~때문에" },
-
+  { word:"back", meaning:["등","허리","뒤쪽의"] },
+  { word:"background", meaning:["배경"] },
+  { word:"bad", meaning:["나쁜","안좋은"] },
+  { word:"bake", meaning:["굽다"] },
+  { word:"ball", meaning:["공"] },
+  { word:"balloon", meaning:["풍선"] },
+  { word:"band", meaning:["밴드","띠"] },
+  { word:"bank", meaning:["은행","둑"] },
+  { word:"base", meaning:["기초","토대"] },
+  { word:"baseball", meaning:["야구"] },
+  { word:"basic", meaning:["기초적인","근본적인"] },
+  { word:"basket", meaning:["바구니"] },
+  { word:"basketball", meaning:["농구"] },
+  { word:"bat", meaning:["방망이"] },
+  { word:"bath", meaning:["욕조"] },
+  { word:"bathroom", meaning:["욕실"] },
+  { word:"battery", meaning:["배터리"] },
+  { word:"battle", meaning:["전투"] },
+  { word:"be", meaning:["있다","이다"] },
+  { word:"beach", meaning:["해변"] },
+  { word:"bean", meaning:["콩"] },
+  { word:"bear", meaning:["곰","참다","견디다"] },
+  { word:"beauty", meaning:["아름다움"] },
+  { word:"because", meaning:["~때문에"] }
 ];
 
 let quizList = [];
 let currentQuiz = null;
 let currentIndex = 0;
+let totalCount = 0;
 
 // -----------------------------
 // 퀴즈 시작
 // -----------------------------
 function startQuiz() {
   const count = Number(document.getElementById("quizCount").value);
+  totalCount = count;
+
+  // 단어 수 체크
+  if (WORDS.length < count) {
+    alert(`단어가 부족합니다. 현재 ${WORDS.length}개의 단어만 있습니다.`);
+    return;
+  }
 
   // 리스트 섞기
   quizList = [...WORDS]
@@ -182,12 +197,15 @@ function startQuiz() {
         question: isWordMode ? item.word : item.meaning.join(", "),
         answerList: isWordMode ? item.meaning : [item.word],
         fullMeaning: item.meaning,
-        originalWord: item.word
+        originalWord: item.word,
+        isWordMode: isWordMode
       };
     });
 
   currentIndex = 0;
   document.getElementById("quizArea").style.display = "block";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("nextBtn").style.display = "none";
   showQuestion();
 }
 
@@ -196,10 +214,14 @@ function startQuiz() {
 // -----------------------------
 function showQuestion() {
   currentQuiz = quizList[currentIndex];
+  document.getElementById("progress").textContent = 
+    `진행: ${currentIndex + 1} / ${totalCount}`;
   document.getElementById("question").textContent =
     `문제 ${currentIndex + 1}: ${currentQuiz.question}`;
   document.getElementById("answerInput").value = "";
   document.getElementById("result").innerHTML = "";
+  document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("answerInput").focus();
 }
 
 // -----------------------------
@@ -207,18 +229,23 @@ function showQuestion() {
 // -----------------------------
 function checkAnswer() {
   const user = document.getElementById("answerInput").value.trim();
-  if (!user) return;
+  if (!user) {
+    alert("답을 입력해주세요!");
+    return;
+  }
 
   const result = document.getElementById("result");
 
   // 정답 조건 (부분일치 허용)
   const isCorrect = currentQuiz.answerList.some(ans =>
-    ans.includes(user) || user.includes(ans)
+    ans.toLowerCase().includes(user.toLowerCase()) || 
+    user.toLowerCase().includes(ans.toLowerCase())
   );
 
   // 맞춘 실제 뜻만
   const matchedMeaning = currentQuiz.answerList.filter(ans =>
-    ans.includes(user) || user.includes(ans)
+    ans.toLowerCase().includes(user.toLowerCase()) || 
+    user.toLowerCase().includes(ans.toLowerCase())
   );
 
   // 전체 뜻 중 나머지
@@ -229,16 +256,19 @@ function checkAnswer() {
   if (isCorrect) {
     result.innerHTML =
       `⭕ <b>정답입니다!</b><br>
-      입력한 뜻: ${user}<br>
+      입력한 답: ${user}<br>
       맞는 정답: ${matchedMeaning.join(", ")}<br>
-      다른 뜻들: ${otherMeanings.join(", ")}`;
+      ${otherMeanings.length > 0 ? `다른 뜻들: ${otherMeanings.join(", ")}` : ''}`;
   } else {
     result.innerHTML =
       `❌ <b>오답입니다.</b><br>
-      입력한 뜻: ${user}<br>
+      입력한 답: ${user}<br>
       정답: ${currentQuiz.answerList.join(", ")}<br>
       전체 뜻: ${currentQuiz.fullMeaning.join(", ")}`;
   }
+
+  // 다음 버튼 표시
+  document.getElementById("nextBtn").style.display = "block";
 }
 
 // -----------------------------
@@ -247,17 +277,25 @@ function checkAnswer() {
 function nextQuestion() {
   currentIndex++;
   if (currentIndex >= quizList.length) {
-    alert("퀴즈 완료!");
+    alert("퀴즈 완료! 수고하셨습니다!");
+    document.getElementById("quizArea").style.display = "none";
     return;
   }
   showQuestion();
 }
 
 // -----------------------------
-// PWA service worker 등록
+// 엔터키로 제출
 // -----------------------------
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
+function handleKeyPress(event) {
+  if (event.key === "Enter") {
+    const nextBtn = document.getElementById("nextBtn");
+    if (nextBtn.style.display === "none") {
+      checkAnswer();
+    } else {
+      nextQuestion();
+    }
+  }
 }
 </script>
 </body>
