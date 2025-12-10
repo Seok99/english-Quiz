@@ -61,6 +61,13 @@
 <div class="container">
   <h2>📘 나만의 영어단어 퀴즈</h2>
 
+  <label>문제 유형 선택:</label>
+  <select id="quizMode">
+    <option value="mixed">혼합 (영어+한글)</option>
+    <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
+    <option value="english">영어 단어만 맞추기 (한글→영어)</option>
+  </select>
+
   <label>문제 개수 선택 (최대 50):</label>
   <select id="quizCount">
     <option value="10">10개</option>
@@ -202,6 +209,7 @@ let totalCount = 0;
 // -----------------------------
 function startQuiz() {
   const count = Number(document.getElementById("quizCount").value);
+  const mode = document.getElementById("quizMode").value;
   totalCount = count;
 
   // 단어 수 체크
@@ -215,7 +223,20 @@ function startQuiz() {
     .sort(() => Math.random() - 0.5)
     .slice(0, count)
     .map(item => {
-      const isWordMode = Math.random() < 0.5;
+      let isWordMode;
+      
+      // 문제 유형에 따라 설정
+      if (mode === "korean") {
+        // 한글 뜻만 맞추기: 영어 단어 제시 → 한글 답
+        isWordMode = true;
+      } else if (mode === "english") {
+        // 영어 단어만 맞추기: 한글 뜻 제시 → 영어 답
+        isWordMode = false;
+      } else {
+        // 혼합: 랜덤
+        isWordMode = Math.random() < 0.5;
+      }
+      
       return {
         question: isWordMode ? item.word : item.meaning.join(", "),
         answerList: isWordMode ? item.meaning : [item.word],
