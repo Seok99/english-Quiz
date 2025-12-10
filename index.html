@@ -49,6 +49,78 @@
       font-size: 18px;
       white-space: pre-line;
     }
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 15px;
+      background: #e0e0e0;
+      color: #333;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .mode-btn:hover {
+      background: #d0d0d0;
+    }
+    .mode-btn.active {
+      background: #4a8fff;
+      color: white;
+      border-color: #4a8fff;
+    }
+    .test-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    .test-table th {
+      background: #4a8fff;
+      color: white;
+      padding: 10px;
+      text-align: left;
+      font-size: 16px;
+    }
+    .test-table td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+    .test-table input {
+      width: 100%;
+      padding: 5px;
+      margin: 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .test-table input.correct {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+    .test-table input.wrong {
+      background: #f8d7da;
+      border-color: #dc3545;
+    }
+    .score-display {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4a8fff;
+      text-align: center;
+      margin: 20px 0;
+      padding: 20px;
+      background: #f0f8ff;
+      border-radius: 8px;
+    }
+    .answer-key {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+    }
     .progress {
       margin: 10px 0;
       font-size: 16px;
@@ -61,24 +133,58 @@
 <div class="container">
   <h2>📘 나만의 영어단어 퀴즈</h2>
 
-  <label>문제 유형 선택:</label>
-  <select id="quizMode">
-    <option value="mixed">혼합 (영어+한글)</option>
-    <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
-    <option value="english">영어 단어만 맞추기 (한글→영어)</option>
-  </select>
+  <!-- 모드 선택 버튼 -->
+  <div class="mode-selector">
+    <button class="mode-btn active" onclick="selectMode('quiz')" id="quizModeBtn">
+      🎯 퀴즈 모드
+    </button>
+    <button class="mode-btn" onclick="selectMode('test')" id="testModeBtn">
+      📝 시험지 모드
+    </button>
+  </div>
 
-  <label>문제 개수 선택 (최대 50):</label>
-  <select id="quizCount">
-    <option value="10">10개</option>
-    <option value="20">20개</option>
-    <option value="30">30개</option>
-    <option value="40">40개</option>
-    <option value="50">50개</option>
-  </select>
+  <!-- 퀴즈 모드 설정 -->
+  <div id="quizSettings">
+    <label>문제 유형 선택:</label>
+    <select id="quizMode">
+      <option value="mixed">혼합 (영어+한글)</option>
+      <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
+      <option value="english">영어 단어만 맞추기 (한글→영어)</option>
+    </select>
 
-  <button onclick="startQuiz()">퀴즈 시작</button>
+    <label>문제 개수 선택 (최대 50):</label>
+    <select id="quizCount">
+      <option value="10">10개</option>
+      <option value="20">20개</option>
+      <option value="30">30개</option>
+      <option value="40">40개</option>
+      <option value="50">50개</option>
+    </select>
 
+    <button onclick="startQuiz()">퀴즈 시작</button>
+  </div>
+
+  <!-- 시험지 모드 설정 -->
+  <div id="testSettings" style="display:none;">
+    <label>시험지 유형 선택:</label>
+    <select id="testMode">
+      <option value="mixed">혼합 (영어+한글)</option>
+      <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
+      <option value="english">영어 단어만 맞추기 (한글→영어)</option>
+    </select>
+
+    <label>문제 개수 선택:</label>
+    <select id="testCount">
+      <option value="20">20개</option>
+      <option value="30">30개</option>
+      <option value="40">40개</option>
+      <option value="50">50개</option>
+    </select>
+
+    <button onclick="startTest()">시험지 생성</button>
+  </div>
+
+  <!-- 퀴즈 영역 -->
   <div id="quizArea" style="display:none;">
     <div class="progress" id="progress"></div>
     <div class="question" id="question"></div>
@@ -90,124 +196,88 @@
     <div class="result" id="result"></div>
     <button onclick="nextQuestion()" id="nextBtn" style="display:none;">다음 문제</button>
   </div>
+
+  <!-- 시험지 영역 -->
+  <div id="testArea" style="display:none;">
+    <h3>📝 영어 단어 시험지</h3>
+    <div id="testTableContainer"></div>
+    <button onclick="submitTest()" id="submitTestBtn" style="margin-top: 20px;">채점하기</button>
+    <div id="scoreArea" style="display:none;">
+      <div class="score-display" id="scoreDisplay"></div>
+      <button onclick="resetTest()">다시 풀기</button>
+      <button onclick="selectMode('test')">새 시험지</button>
+    </div>
+  </div>
 </div>
 
 <script>
 // -----------------------------
-// 영단어 목록 (모든 meaning을 배열로 통일)
+// 영단어 목록 (words.json에서 불러옴)
 // -----------------------------
-const WORDS = [
-  { word:"a", meaning:["하나의"] },
-  { word:"about", meaning:["~에 대한", "약", "거의"] },
-  { word:"above", meaning:["~보다 위에"] },
-  { word:"academy", meaning:["학교"] },
-  { word:"accent", meaning:["말씨","강세"] },
-  { word:"accident", meaning:["사고","우연"] },
-  { word:"across", meaning:["건너서","가로질러"] },
-  { word:"act", meaning:["행동하다","행동"] },
-  { word:"add", meaning:["더하다","첨가하다"] },
-  { word:"address", meaning:["주소","주소를 쓰다"] },
-  { word:"adult", meaning:["성인"] },
-  { word:"adventure", meaning:["모험"] },
-  { word:"advise", meaning:["조언하다"] },
-  { word:"afraid", meaning:["두려워하는","겁내는"] },
-  { word:"after", meaning:["후에"] },
-  { word:"afternoon", meaning:["오후"] },
-  { word:"again", meaning:["다시","한 번 더"] },
-  { word:"against", meaning:["~에 반대하여"] },
-  { word:"age", meaning:["나이","연령"] },
-  { word:"ago", meaning:["전에"] },
-  { word:"agree", meaning:["동의하다"] },
-  { word:"ahead", meaning:["앞으로","앞에"] },
-  { word:"air", meaning:["공기"] },
-  { word:"airplane", meaning:["비행기"] },
-  { word:"airline", meaning:["항공사"] },
-  { word:"airport", meaning:["공항"] },
-  { word:"all", meaning:["모든","모두"] },
-  { word:"almost", meaning:["거의"] },
-  { word:"alone", meaning:["혼자","외로운"] },
-  { word:"along", meaning:["~을 따라"] },
-  { word:"aloud", meaning:["소리 내어","크게"] },
-  { word:"already", meaning:["이미","벌써"] },
-  { word:"alright", meaning:["괜찮은"] },
-  { word:"also", meaning:["또한","게다가"] },
-  { word:"always", meaning:["항상"] },
-  { word:"am", meaning:["오전"] },
-  { word:"and", meaning:["그리고"] },
-  { word:"angel", meaning:["천사"] },
-  { word:"anger", meaning:["분노"] },
-  { word:"animal", meaning:["동물"] },
-  { word:"another", meaning:["또 하나의"] },
-  { word:"answer", meaning:["대답","회신"] },
-  { word:"ant", meaning:["개미"] },
-  { word:"any", meaning:["어느","어떤"] },
-  { word:"apple", meaning:["사과"] },
-  { word:"area", meaning:["지역","구역"] },
-  { word:"arm", meaning:["팔"] },
-  { word:"around", meaning:["약","둘레에"] },
-  { word:"arrive", meaning:["도착하다"] },
-  { word:"art", meaning:["미술"] },
-  { word:"as", meaning:["~처럼","~로서"] },
-  { word:"ask", meaning:["묻다","요청하다"] },
-  { word:"at", meaning:["~에"] },
-  { word:"aunt", meaning:["고모","이모","숙모"] },
-  { word:"away", meaning:["떨어져"] },
-  { word:"baby", meaning:["아기"] },
-  { word:"back", meaning:["등","허리","뒤쪽의"] },
-  { word:"background", meaning:["배경"] },
-  { word:"bad", meaning:["나쁜","안좋은"] },
-  { word:"bake", meaning:["굽다"] },
-  { word:"ball", meaning:["공"] },
-  { word:"balloon", meaning:["풍선"] },
-  { word:"band", meaning:["밴드","띠"] },
-  { word:"bank", meaning:["은행","둑"] },
-  { word:"base", meaning:["기초","토대"] },
-  { word:"baseball", meaning:["야구"] },
-  { word:"basic", meaning:["기초적인","근본적인"] },
-  { word:"basket", meaning:["바구니"] },
-  { word:"basketball", meaning:["농구"] },
-  { word:"bat", meaning:["방망이"] },
-  { word:"bath", meaning:["욕조"] },
-  { word:"bathroom", meaning:["욕실"] },
-  { word:"battery", meaning:["배터리"] },
-  { word:"battle", meaning:["전투"] },
-  { word:"be", meaning:["있다","이다"] },
-  { word:"beach", meaning:["해변"] },
-  { word:"bean", meaning:["콩"] },
-  { word:"bear", meaning:["곰","참다","견디다"] },
-  { word:"beauty", meaning:["아름다움"] },
-  { word:"because", meaning:["~때문에"] },
-  { word:"become", meaning:["~이 되다"] },
-  { word:"bed", meaning:["침대"] },
-  { word:"bedroom", meaning:["침실"] },
-  { word:"bee", meaning:["벌"] },
-  { word:"beef", meaning:["소고기"] },
-  { word:"before", meaning:["전에"] },
-  { word:"begin", meaning:["시작하다"] },
-  { word:"behind", meaning:["뒤에"] },
-  { word:"believe", meaning:["믿다"] },
-  { word:"bell", meaning:["종"] },
-  { word:"below", meaning:["아래에"] },
-  { word:"beside", meaning:["옆에"] },
-  { word:"between", meaning:["사이에"] },
-  { word:"bicycle", meaning:["자전거"] },
-  { word:"big", meaning:["큰"] },
-  { word:"bill", meaning:["계산서"] },
-  { word:"bird", meaning:["새"] },
-  { word:"birth", meaning:["탄생"] },
-  { word:"birthday", meaning:["생일"] },
-  { word:"bite", meaning:["물다"] }
-];
+let WORDS = [];
+let isLoading = true;
+
+// JSON 파일에서 단어 불러오기
+fetch('words.json')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('words.json 파일을 찾을 수 없습니다.');
+    }
+    return response.json();
+  })
+  .then(data => {
+    WORDS = data;
+    isLoading = false;
+    console.log(`${WORDS.length}개의 단어를 불러왔습니다.`);
+  })
+  .catch(error => {
+    isLoading = false;
+    alert('단어 파일을 불러오는데 실패했습니다: ' + error.message);
+    console.error('Error loading words:', error);
+  });
 
 let quizList = [];
 let currentQuiz = null;
 let currentIndex = 0;
 let totalCount = 0;
+let testList = [];
+let currentMode = 'quiz';
+
+// -----------------------------
+// 모드 선택
+// -----------------------------
+function selectMode(mode) {
+  currentMode = mode;
+  
+  // 버튼 스타일 변경
+  document.getElementById('quizModeBtn').classList.remove('active');
+  document.getElementById('testModeBtn').classList.remove('active');
+  
+  if (mode === 'quiz') {
+    document.getElementById('quizModeBtn').classList.add('active');
+    document.getElementById('quizSettings').style.display = 'block';
+    document.getElementById('testSettings').style.display = 'none';
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('testArea').style.display = 'none';
+  } else {
+    document.getElementById('testModeBtn').classList.add('active');
+    document.getElementById('quizSettings').style.display = 'none';
+    document.getElementById('testSettings').style.display = 'block';
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('testArea').style.display = 'none';
+  }
+}
 
 // -----------------------------
 // 퀴즈 시작
 // -----------------------------
 function startQuiz() {
+  // 로딩 체크
+  if (isLoading) {
+    alert('단어를 불러오는 중입니다. 잠시만 기다려주세요.');
+    return;
+  }
+
   const count = Number(document.getElementById("quizCount").value);
   const mode = document.getElementById("quizMode").value;
   totalCount = count;
@@ -354,6 +424,164 @@ function speakWord() {
   // 발음 실행
   window.speechSynthesis.cancel(); // 이전 음성 취소
   window.speechSynthesis.speak(utterance);
+}
+
+// -----------------------------
+// 시험지 모드 시작
+// -----------------------------
+function startTest() {
+  // 로딩 체크
+  if (isLoading) {
+    alert('단어를 불러오는 중입니다. 잠시만 기다려주세요.');
+    return;
+  }
+
+  const count = Number(document.getElementById("testCount").value);
+  const mode = document.getElementById("testMode").value;
+
+  // 단어 수 체크
+  if (WORDS.length < count) {
+    alert(`단어가 부족합니다. 현재 ${WORDS.length}개의 단어만 있습니다.`);
+    return;
+  }
+
+  // 시험지 리스트 생성
+  testList = [...WORDS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count)
+    .map((item, index) => {
+      let isWordMode;
+      
+      if (mode === "korean") {
+        isWordMode = true; // 영어 → 한글
+      } else if (mode === "english") {
+        isWordMode = false; // 한글 → 영어
+      } else {
+        isWordMode = Math.random() < 0.5; // 혼합
+      }
+      
+      return {
+        id: index,
+        question: isWordMode ? item.word : item.meaning.join(", "),
+        correctAnswer: isWordMode ? item.meaning : [item.word],
+        fullMeaning: item.meaning,
+        originalWord: item.word,
+        isWordMode: isWordMode,
+        userAnswer: ""
+      };
+    });
+
+  // 시험지 테이블 생성
+  createTestTable();
+  
+  document.getElementById('testArea').style.display = 'block';
+  document.getElementById('scoreArea').style.display = 'none';
+  document.getElementById('submitTestBtn').style.display = 'block';
+}
+
+// -----------------------------
+// 시험지 테이블 생성
+// -----------------------------
+function createTestTable() {
+  let html = '<table class="test-table">';
+  html += '<thead><tr><th style="width:50px;">번호</th><th>문제</th><th>답안</th></tr></thead>';
+  html += '<tbody>';
+  
+  testList.forEach((item, index) => {
+    html += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.question}</td>
+        <td>
+          <input type="text" 
+                 id="answer_${item.id}" 
+                 placeholder="답 입력"
+                 autocomplete="off" />
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += '</tbody></table>';
+  document.getElementById('testTableContainer').innerHTML = html;
+}
+
+// -----------------------------
+// 시험지 채점
+// -----------------------------
+function submitTest() {
+  let correctCount = 0;
+  
+  testList.forEach(item => {
+    const inputEl = document.getElementById(`answer_${item.id}`);
+    const userAnswer = inputEl.value.trim();
+    item.userAnswer = userAnswer;
+    
+    // 정답 체크 (부분 일치 허용)
+    const isCorrect = item.correctAnswer.some(ans =>
+      ans.toLowerCase().includes(userAnswer.toLowerCase()) || 
+      userAnswer.toLowerCase().includes(ans.toLowerCase())
+    );
+    
+    // 스타일 적용
+    if (userAnswer === "") {
+      inputEl.classList.remove('correct', 'wrong');
+    } else if (isCorrect) {
+      inputEl.classList.add('correct');
+      inputEl.classList.remove('wrong');
+      correctCount++;
+    } else {
+      inputEl.classList.add('wrong');
+      inputEl.classList.remove('correct');
+    }
+    
+    // 정답 표시
+    if (!isCorrect && userAnswer !== "") {
+      const correctText = item.correctAnswer.join(", ");
+      if (!inputEl.nextElementSibling || !inputEl.nextElementSibling.classList.contains('answer-key')) {
+        const answerKey = document.createElement('div');
+        answerKey.className = 'answer-key';
+        answerKey.textContent = `정답: ${correctText}`;
+        inputEl.parentElement.appendChild(answerKey);
+      }
+    }
+  });
+  
+  // 점수 표시
+  const score = Math.round((correctCount / testList.length) * 100);
+  document.getElementById('scoreDisplay').innerHTML = `
+    <div>총 ${testList.length}문제 중 ${correctCount}개 정답</div>
+    <div style="font-size: 36px; margin-top: 10px;">${score}점</div>
+  `;
+  
+  document.getElementById('scoreArea').style.display = 'block';
+  document.getElementById('submitTestBtn').style.display = 'none';
+  
+  // 스크롤을 점수로 이동
+  document.getElementById('scoreDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// -----------------------------
+// 시험지 초기화
+// -----------------------------
+function resetTest() {
+  testList.forEach(item => {
+    const inputEl = document.getElementById(`answer_${item.id}`);
+    if (inputEl) {
+      inputEl.value = "";
+      inputEl.classList.remove('correct', 'wrong');
+      
+      // 정답 표시 제거
+      const answerKey = inputEl.parentElement.querySelector('.answer-key');
+      if (answerKey) {
+        answerKey.remove();
+      }
+    }
+  });
+  
+  document.getElementById('scoreArea').style.display = 'none';
+  document.getElementById('submitTestBtn').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // -----------------------------
