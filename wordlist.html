@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>전체 단어 - 영어단어 퀴즈</title>
+  <meta name="theme-color" content="#ffffff">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    button, select {
+      font-size: 18px;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    button {
+      background: #4a8fff;
+      color: white;
+      font-weight: bold;
+      border: none;
+    }
+    button:hover {
+      background: #3a7fee;
+    }
+    .nav-menu {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px;
+      background: #e8f4f8;
+      color: #333;
+      border: 2px solid #4a8fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.3s;
+      display: block;
+    }
+    .nav-btn:hover {
+      background: #4a8fff;
+      color: white;
+    }
+    .nav-btn.active {
+      background: #4a8fff;
+      color: white;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .controls button {
+      flex: 1;
+      min-width: 150px;
+    }
+    .word-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    .word-table thead {
+      background: #4a8fff;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .word-table th {
+      padding: 12px;
+      text-align: left;
+      font-size: 16px;
+    }
+    .word-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .word-table tbody tr:hover {
+      background: #f0f8ff;
+    }
+    .word-col {
+      font-weight: bold;
+      color: #2c5aa0;
+      width: 30%;
+    }
+    .meaning-col {
+      color: #333;
+      width: 50%;
+    }
+    .action-col {
+      width: 20%;
+      text-align: center;
+    }
+    .speak-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .speak-btn:hover {
+      background: #218838;
+    }
+    .bookmark-btn {
+      background: #ffc107;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 5px;
+    }
+    .bookmark-btn:hover {
+      background: #e0a800;
+    }
+    .bookmark-btn.active {
+      background: #ff9800;
+    }
+    .total-count {
+      font-size: 18px;
+      color: #666;
+      margin: 10px 0;
+    }
+    .playing {
+      background: #fffacd !important;
+    }
+    #speedControl {
+      width: auto;
+      min-width: 150px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📚 전체 단어 목록</h2>
+
+  <!-- 네비게이션 메뉴 -->
+  <div class="nav-menu">
+    <a href="wordlist.html" class="nav-btn active">📚 전체 단어</a>
+    <a href="bookmarks.html" class="nav-btn">⭐ 즐겨찾기</a>
+    <a href="index.html" class="nav-btn">🎯 퀴즈</a>
+  </div>
+
+  <div class="total-count" id="totalCount">불러오는 중...</div>
+
+  <!-- 컨트롤 버튼 -->
+  <div class="controls">
+    <button onclick="playAll()" id="playBtn">▶️ 순차 재생 시작</button>
+    <button onclick="stopPlay()" id="stopBtn" style="background: #dc3545; display: none;">⏹️ 재생 중지</button>
+    <select id="speedControl" onchange="changeSpeed()">
+      <option value="0.6">느리게 (0.6x)</option>
+      <option value="0.8" selected>보통 (0.8x)</option>
+      <option value="1.0">빠르게 (1.0x)</option>
+    </select>
+  </div>
+
+  <!-- 단어 테이블 -->
+  <table class="word-table">
+    <thead>
+      <tr>
+        <th>번호</th>
+        <th class="word-col">영어 단어</th>
+        <th class="meaning-col">뜻</th>
+        <th class="action-col">동작</th>
+      </tr>
+    </thead>
+    <tbody id="wordListBody">
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 40px;">단어를 불러오는 중...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+let WORDS = [];
+let bookmarkedWords = new Set();
+let isPlaying = false;
+let currentPlayIndex = 0;
+let speechRate = 0.8;
+
+// -----------------------------
+// 데이터 불러오기
+// -----------------------------
+async function loadData() {
+  try {
+    // 단어 불러오기
+    const response = await fetch('words.json');
+    if (!response.ok) throw new Error('words.json 파일을 찾을 수 없습니다.');
+    WORDS = await response.json();
+    
+    // 즐겨찾기 불러오기
+    const saved = localStorage.getItem('bookmarkedWords');
+    if (saved) {
+      bookmarkedWords = new Set(JSON.parse(saved));
+    }
+    
+    // 테이블 생성
+    renderWordList();
+    
+    document.getElementById('totalCount').textContent = `총 ${WORDS.length}개의 단어`;
+  } catch (error) {
+    alert('데이터를 불러오는데 실패했습니다: ' + error.message);
+    console.error('Error:', error);
+  }
+}
+
+// -----------------------------
+// 단어 목록 렌더링
+// -----------------------------
+function renderWordList() {
+  const tbody = document.getElementById('wordListBody');
+  let html = '';
+  
+  WORDS.forEach((item, index) => {
+    const isBookmarked = bookmarkedWords.has(item.word);
+    const bookmarkClass = isBookmarked ? 'active' : '';
+    const bookmarkText = isBookmarked ? '⭐' : '☆';
+    
+    html += `
+      <tr id="row_${index}">
+        <td>${index + 1}</td>
+        <td class="word-col">${item.word}</td>
+        <td class="meaning-col">${item.meaning.join(', ')}</td>
+        <td class="action-col">
+          <button class="speak-btn" onclick="speakWord('${item.word}')">🔊</button>
+          <button class="bookmark-btn ${bookmarkClass}" onclick="toggleBookmark('${item.word}', ${index})">
+            ${bookmarkText}
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  
+  tbody.innerHTML = html;
+}
+
+// -----------------------------
+// 단어 발음
+// -----------------------------
+function speakWord(word) {
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = 'en-US';
+  utterance.rate = speechRate;
+  
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+// -----------------------------
+// 순차 재생
+// -----------------------------
+function playAll() {
+  if (WORDS.length === 0) {
+    alert('단어가 없습니다.');
+    return;
+  }
+  
+  isPlaying = true;
+  currentPlayIndex = 0;
+  
+  document.getElementById('playBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'block';
+  
+  playNext();
+}
+
+function playNext() {
+  if (!isPlaying || currentPlayIndex >= WORDS.length) {
+    stopPlay();
+    return;
+  }
+  
+  const word = WORDS[currentPlayIndex].word;
+  const row = document.getElementById(`row_${currentPlayIndex}`);
+  
+  // 이전 행 하이라이트 제거
+  document.querySelectorAll('.word-table tbody tr').forEach(tr => {
+    tr.classList.remove('playing');
+  });
+  
+  // 현재 행 하이라이트
+  row.classList.add('playing');
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  
+  // 발음
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = 'en-US';
+  utterance.rate = speechRate;
+  
+  utterance.onend = () => {
+    if (isPlaying) {
+      currentPlayIndex++;
+      // 다음 단어까지 0.5초 대기
+      setTimeout(playNext, 500);
+    }
+  };
+  
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  window.speechSynthesis.cancel();
+  
+  document.getElementById('playBtn').style.display = 'block';
+  document.getElementById('stopBtn').style.display = 'none';
+  
+  // 하이라이트 제거
+  document.querySelectorAll('.word-table tbody tr').forEach(tr => {
+    tr.classList.remove('playing');
+  });
+}
+
+// -----------------------------
+// 속도 변경
+// -----------------------------
+function changeSpeed() {
+  speechRate = parseFloat(document.getElementById('speedControl').value);
+}
+
+// -----------------------------
+// 즐겨찾기 토글
+// -----------------------------
+function toggleBookmark(word, index) {
+  if (bookmarkedWords.has(word)) {
+    bookmarkedWords.delete(word);
+  } else {
+    bookmarkedWords.add(word);
+  }
+  
+  // localStorage에 저장
+  localStorage.setItem('bookmarkedWords', JSON.stringify([...bookmarkedWords]));
+  
+  // 버튼만 업데이트 (전체 렌더링 안 함)
+  const btn = document.querySelector(`#row_${index} .bookmark-btn`);
+  if (bookmarkedWords.has(word)) {
+    btn.classList.add('active');
+    btn.textContent = '⭐';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '☆';
+  }
+}
+
+// 페이지 로드 시 데이터 불러오기
+loadData();
+</script>
+</body>
+</html>
