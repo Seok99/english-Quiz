@@ -49,6 +49,36 @@
       font-size: 18px;
       white-space: pre-line;
     }
+    .nav-menu {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px;
+      background: #e8f4f8;
+      color: #333;
+      border: 2px solid #4a8fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.3s;
+      display: block;
+    }
+    .nav-btn:hover {
+      background: #4a8fff;
+      color: white;
+    }
+    .nav-btn.active {
+      background: #4a8fff;
+      color: white;
+    }
     .mode-selector {
       display: flex;
       gap: 10px;
@@ -89,6 +119,23 @@
     .test-table td {
       padding: 8px;
       border-bottom: 1px solid #ddd;
+      vertical-align: middle;
+    }
+    .test-bookmark-btn {
+      background: #ffc107;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 5px;
+    }
+    .test-bookmark-btn:hover {
+      background: #e0a800;
+    }
+    .test-bookmark-btn.active {
+      background: #ff9800;
     }
     .test-table input {
       width: 100%;
@@ -132,6 +179,13 @@
 
 <div class="container">
   <h2>📘 나만의 영어단어 퀴즈</h2>
+
+  <!-- 네비게이션 메뉴 -->
+  <div class="nav-menu">
+    <a href="wordlist.html" class="nav-btn">📚 전체 단어</a>
+    <a href="bookmarks.html" class="nav-btn">⭐ 즐겨찾기</a>
+    <a href="index.html" class="nav-btn active">🎯 퀴즈</a>
+  </div>
 
   <!-- 모드 선택 버튼 -->
   <div class="mode-selector">
@@ -191,6 +245,9 @@
     <button onclick="speakWord()" id="speakBtn" style="background: #28a745; margin-bottom: 10px;">
       🔊 발음 듣기
     </button>
+    <button onclick="toggleBookmark()" id="bookmarkBtn" style="background: #ffc107; margin-bottom: 10px;">
+      ⭐ 즐겨찾기 추가
+    </button>
     <input id="answerInput" placeholder="정답 입력..." onkeypress="handleKeyPress(event)" />
     <button onclick="checkAnswer()">제출</button>
     <div class="result" id="result"></div>
@@ -242,6 +299,52 @@ let currentIndex = 0;
 let totalCount = 0;
 let testList = [];
 let currentMode = 'quiz';
+let bookmarkedWords = new Set();
+
+// -----------------------------
+// 즐겨찾기 관리
+// -----------------------------
+function loadBookmarks() {
+  const saved = localStorage.getItem('bookmarkedWords');
+  if (saved) {
+    bookmarkedWords = new Set(JSON.parse(saved));
+  }
+}
+
+function saveBookmarks() {
+  localStorage.setItem('bookmarkedWords', JSON.stringify([...bookmarkedWords]));
+}
+
+function toggleBookmark() {
+  if (!currentQuiz) return;
+  
+  const word = currentQuiz.originalWord;
+  
+  if (bookmarkedWords.has(word)) {
+    bookmarkedWords.delete(word);
+    alert(`"${word}" 즐겨찾기에서 제거했습니다.`);
+  } else {
+    bookmarkedWords.add(word);
+    alert(`"${word}" 즐겨찾기에 추가했습니다!`);
+  }
+  
+  saveBookmarks();
+  updateBookmarkButton();
+}
+
+function updateBookmarkButton() {
+  const btn = document.getElementById("bookmarkBtn");
+  if (bookmarkedWords.has(currentQuiz.originalWord)) {
+    btn.textContent = "⭐ 즐겨찾기 제거";
+    btn.style.background = "#ff9800";
+  } else {
+    btn.textContent = "⭐ 즐겨찾기 추가";
+    btn.style.background = "#ffc107";
+  }
+}
+
+// 페이지 로드 시 즐겨찾기 불러오기
+loadBookmarks();
 
 // -----------------------------
 // 모드 선택
@@ -336,6 +439,9 @@ function showQuestion() {
   document.getElementById("result").innerHTML = "";
   document.getElementById("nextBtn").style.display = "none";
   document.getElementById("answerInput").focus();
+  
+  // 즐겨찾기 버튼 상태 업데이트
+  updateBookmarkButton();
 }
 
 // -----------------------------
@@ -402,27 +508,16 @@ function nextQuestion() {
 // 음성 발음 (영어 단어만)
 // -----------------------------
 function speakWord() {
-  // 현재 문제가 영어 단어인 경우에만 발음
   if (!currentQuiz) return;
   
-  let textToSpeak = "";
-  
-  // 영어 단어를 물어보는 문제인 경우 (한글 뜻 → 영어 답)
-  if (!currentQuiz.isWordMode) {
-    textToSpeak = currentQuiz.originalWord;
-  } 
-  // 한글 뜻을 물어보는 문제인 경우 (영어 단어 → 한글 답)
-  else {
-    textToSpeak = currentQuiz.originalWord;
-  }
+  const textToSpeak = currentQuiz.originalWord;
   
   // 음성 합성
   const utterance = new SpeechSynthesisUtterance(textToSpeak);
-  utterance.lang = 'en-US'; // 영어 발음
-  utterance.rate = 0.8; // 속도 (0.8 = 조금 느리게)
+  utterance.lang = 'en-US';
+  utterance.rate = 0.8;
   
-  // 발음 실행
-  window.speechSynthesis.cancel(); // 이전 음성 취소
+  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
 
@@ -430,7 +525,6 @@ function speakWord() {
 // 시험지 모드 시작
 // -----------------------------
 function startTest() {
-  // 로딩 체크
   if (isLoading) {
     alert('단어를 불러오는 중입니다. 잠시만 기다려주세요.');
     return;
@@ -439,13 +533,11 @@ function startTest() {
   const count = Number(document.getElementById("testCount").value);
   const mode = document.getElementById("testMode").value;
 
-  // 단어 수 체크
   if (WORDS.length < count) {
     alert(`단어가 부족합니다. 현재 ${WORDS.length}개의 단어만 있습니다.`);
     return;
   }
 
-  // 시험지 리스트 생성
   testList = [...WORDS]
     .sort(() => Math.random() - 0.5)
     .slice(0, count)
@@ -453,11 +545,11 @@ function startTest() {
       let isWordMode;
       
       if (mode === "korean") {
-        isWordMode = true; // 영어 → 한글
+        isWordMode = true;
       } else if (mode === "english") {
-        isWordMode = false; // 한글 → 영어
+        isWordMode = false;
       } else {
-        isWordMode = Math.random() < 0.5; // 혼합
+        isWordMode = Math.random() < 0.5;
       }
       
       return {
@@ -471,7 +563,6 @@ function startTest() {
       };
     });
 
-  // 시험지 테이블 생성
   createTestTable();
   
   document.getElementById('testArea').style.display = 'block';
@@ -484,10 +575,14 @@ function startTest() {
 // -----------------------------
 function createTestTable() {
   let html = '<table class="test-table">';
-  html += '<thead><tr><th style="width:50px;">번호</th><th>문제</th><th>답안</th></tr></thead>';
+  html += '<thead><tr><th style="width:50px;">번호</th><th>문제</th><th>답안</th><th style="width:80px;">즐겨찾기</th></tr></thead>';
   html += '<tbody>';
   
   testList.forEach((item, index) => {
+    const isBookmarked = bookmarkedWords.has(item.originalWord);
+    const bookmarkClass = isBookmarked ? 'active' : '';
+    const bookmarkText = isBookmarked ? '⭐' : '☆';
+    
     html += `
       <tr>
         <td>${index + 1}</td>
@@ -498,12 +593,42 @@ function createTestTable() {
                  placeholder="답 입력"
                  autocomplete="off" />
         </td>
+        <td style="text-align: center;">
+          <button class="test-bookmark-btn ${bookmarkClass}" 
+                  onclick="toggleTestBookmark('${item.originalWord}', ${item.id})"
+                  id="bookmark_${item.id}">
+            ${bookmarkText}
+          </button>
+        </td>
       </tr>
     `;
   });
   
   html += '</tbody></table>';
   document.getElementById('testTableContainer').innerHTML = html;
+}
+
+// -----------------------------
+// 시험지에서 즐겨찾기 토글
+// -----------------------------
+function toggleTestBookmark(word, itemId) {
+  if (bookmarkedWords.has(word)) {
+    bookmarkedWords.delete(word);
+  } else {
+    bookmarkedWords.add(word);
+  }
+  
+  saveBookmarks();
+  
+  // 버튼 업데이트
+  const btn = document.getElementById(`bookmark_${itemId}`);
+  if (bookmarkedWords.has(word)) {
+    btn.classList.add('active');
+    btn.textContent = '⭐';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '☆';
+  }
 }
 
 // -----------------------------
@@ -517,13 +642,11 @@ function submitTest() {
     const userAnswer = inputEl.value.trim();
     item.userAnswer = userAnswer;
     
-    // 정답 체크 (부분 일치 허용)
     const isCorrect = item.correctAnswer.some(ans =>
       ans.toLowerCase().includes(userAnswer.toLowerCase()) || 
       userAnswer.toLowerCase().includes(ans.toLowerCase())
     );
     
-    // 스타일 적용
     if (userAnswer === "") {
       inputEl.classList.remove('correct', 'wrong');
     } else if (isCorrect) {
@@ -535,7 +658,6 @@ function submitTest() {
       inputEl.classList.remove('correct');
     }
     
-    // 정답 표시
     if (!isCorrect && userAnswer !== "") {
       const correctText = item.correctAnswer.join(", ");
       if (!inputEl.nextElementSibling || !inputEl.nextElementSibling.classList.contains('answer-key')) {
@@ -547,7 +669,6 @@ function submitTest() {
     }
   });
   
-  // 점수 표시
   const score = Math.round((correctCount / testList.length) * 100);
   document.getElementById('scoreDisplay').innerHTML = `
     <div>총 ${testList.length}문제 중 ${correctCount}개 정답</div>
@@ -557,7 +678,6 @@ function submitTest() {
   document.getElementById('scoreArea').style.display = 'block';
   document.getElementById('submitTestBtn').style.display = 'none';
   
-  // 스크롤을 점수로 이동
   document.getElementById('scoreDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -571,7 +691,6 @@ function resetTest() {
       inputEl.value = "";
       inputEl.classList.remove('correct', 'wrong');
       
-      // 정답 표시 제거
       const answerKey = inputEl.parentElement.querySelector('.answer-key');
       if (answerKey) {
         answerKey.remove();
