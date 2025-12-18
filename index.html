@@ -520,21 +520,19 @@ function checkAnswer() {
 
   const result = document.getElementById("result");
 
-  // 정답 조건 (부분일치 허용)
+  // 정답 조건: 항상 완전일치 (대소문자 구분 안 함)
   const isCorrect = currentQuiz.answerList.some(ans =>
-    ans.toLowerCase().includes(user.toLowerCase()) || 
-    user.toLowerCase().includes(ans.toLowerCase())
+    ans.toLowerCase() === user.toLowerCase()
   );
 
-  // 맞춘 실제 뜻만
+  // 맞춘 정답
   const matchedMeaning = currentQuiz.answerList.filter(ans =>
-    ans.toLowerCase().includes(user.toLowerCase()) || 
-    user.toLowerCase().includes(ans.toLowerCase())
+    ans.toLowerCase() === user.toLowerCase()
   );
 
   // 전체 뜻 중 나머지
   const otherMeanings = currentQuiz.fullMeaning.filter(
-    m => !matchedMeaning.includes(m)
+    m => !matchedMeaning.some(matched => matched.toLowerCase() === m.toLowerCase())
   );
 
   if (isCorrect) {
@@ -729,11 +727,12 @@ function submitTest() {
     const userAnswer = inputEl.value.trim();
     item.userAnswer = userAnswer;
     
+    // 정답 체크: 항상 완전일치 (대소문자 구분 안 함)
     const isCorrect = item.correctAnswer.some(ans =>
-      ans.toLowerCase().includes(userAnswer.toLowerCase()) || 
-      userAnswer.toLowerCase().includes(ans.toLowerCase())
+      ans.toLowerCase() === userAnswer.toLowerCase()
     );
     
+    // 스타일 적용
     if (userAnswer === "") {
       inputEl.classList.remove('correct', 'wrong');
     } else if (isCorrect) {
@@ -745,6 +744,7 @@ function submitTest() {
       inputEl.classList.remove('correct');
     }
     
+    // 정답 표시
     if (!isCorrect && userAnswer !== "") {
       const correctText = item.correctAnswer.join(", ");
       if (!inputEl.nextElementSibling || !inputEl.nextElementSibling.classList.contains('answer-key')) {
