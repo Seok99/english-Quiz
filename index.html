@@ -206,6 +206,14 @@
       <option value="english">영어 단어만 맞추기 (한글→영어)</option>
     </select>
 
+    <label>단어 범위 선택:</label>
+    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+      <input type="number" id="rangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
+      <span>~</span>
+      <input type="number" id="rangeEnd" placeholder="끝" min="1" style="width: 80px;" />
+      <button onclick="setFullRange()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+    </div>
+
     <label>문제 개수 선택 (최대 50):</label>
     <select id="quizCount">
       <option value="10">10개</option>
@@ -226,6 +234,14 @@
       <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
       <option value="english">영어 단어만 맞추기 (한글→영어)</option>
     </select>
+
+    <label>단어 범위 선택:</label>
+    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+      <input type="number" id="testRangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
+      <span>~</span>
+      <input type="number" id="testRangeEnd" placeholder="끝" min="1" style="width: 80px;" />
+      <button onclick="setFullRangeTest()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+    </div>
 
     <label>문제 개수 선택:</label>
     <select id="testCount">
@@ -347,6 +363,32 @@ function updateBookmarkButton() {
 loadBookmarks();
 
 // -----------------------------
+// 전체 범위 설정
+// -----------------------------
+function setFullRange() {
+  if (WORDS.length > 0) {
+    document.getElementById('rangeEnd').value = WORDS.length;
+  }
+}
+
+function setFullRangeTest() {
+  if (WORDS.length > 0) {
+    document.getElementById('testRangeEnd').value = WORDS.length;
+  }
+}
+
+// 데이터 로드 후 끝 번호 자동 설정
+window.addEventListener('load', () => {
+  // 1초 후 재시도 (데이터 로딩 대기)
+  setTimeout(() => {
+    if (WORDS.length > 0) {
+      document.getElementById('rangeEnd').value = WORDS.length;
+      document.getElementById('testRangeEnd').value = WORDS.length;
+    }
+  }, 1000);
+});
+
+// -----------------------------
 // 모드 선택
 // -----------------------------
 function selectMode(mode) {
@@ -383,16 +425,38 @@ function startQuiz() {
 
   const count = Number(document.getElementById("quizCount").value);
   const mode = document.getElementById("quizMode").value;
-  totalCount = count;
-
-  // 단어 수 체크
-  if (WORDS.length < count) {
-    alert(`단어가 부족합니다. 현재 ${WORDS.length}개의 단어만 있습니다.`);
+  const rangeStart = Number(document.getElementById("rangeStart").value);
+  const rangeEnd = Number(document.getElementById("rangeEnd").value);
+  
+  // 범위 유효성 검사
+  if (!rangeStart || !rangeEnd) {
+    alert('단어 범위를 입력해주세요.');
+    return;
+  }
+  
+  if (rangeStart < 1 || rangeEnd > WORDS.length) {
+    alert(`단어 범위는 1~${WORDS.length} 사이여야 합니다.`);
+    return;
+  }
+  
+  if (rangeStart > rangeEnd) {
+    alert('시작 번호가 끝 번호보다 클 수 없습니다.');
     return;
   }
 
+  // 범위 내 단어 필터링
+  const rangeWords = WORDS.slice(rangeStart - 1, rangeEnd);
+  
+  // 단어 수 체크
+  if (rangeWords.length < count) {
+    alert(`선택한 범위에 ${rangeWords.length}개의 단어만 있습니다. 문제 개수를 줄여주세요.`);
+    return;
+  }
+  
+  totalCount = count;
+
   // 리스트 섞기
-  quizList = [...WORDS]
+  quizList = [...rangeWords]
     .sort(() => Math.random() - 0.5)
     .slice(0, count)
     .map(item => {
@@ -532,13 +596,36 @@ function startTest() {
 
   const count = Number(document.getElementById("testCount").value);
   const mode = document.getElementById("testMode").value;
-
-  if (WORDS.length < count) {
-    alert(`단어가 부족합니다. 현재 ${WORDS.length}개의 단어만 있습니다.`);
+  const rangeStart = Number(document.getElementById("testRangeStart").value);
+  const rangeEnd = Number(document.getElementById("testRangeEnd").value);
+  
+  // 범위 유효성 검사
+  if (!rangeStart || !rangeEnd) {
+    alert('단어 범위를 입력해주세요.');
+    return;
+  }
+  
+  if (rangeStart < 1 || rangeEnd > WORDS.length) {
+    alert(`단어 범위는 1~${WORDS.length} 사이여야 합니다.`);
+    return;
+  }
+  
+  if (rangeStart > rangeEnd) {
+    alert('시작 번호가 끝 번호보다 클 수 없습니다.');
     return;
   }
 
-  testList = [...WORDS]
+  // 범위 내 단어 필터링
+  const rangeWords = WORDS.slice(rangeStart - 1, rangeEnd);
+  
+  // 단어 수 체크
+  if (rangeWords.length < count) {
+    alert(`선택한 범위에 ${rangeWords.length}개의 단어만 있습니다. 문제 개수를 줄여주세요.`);
+    return;
+  }
+
+  // 시험지 리스트 생성
+  testList = [...rangeWords]
     .sort(() => Math.random() - 0.5)
     .slice(0, count)
     .map((item, index) => {
