@@ -74,88 +74,16 @@
       margin: 20px 0;
       flex-wrap: wrap;
     }
-    .controls button {
+    .controls button, .controls select {
       flex: 1;
       min-width: 150px;
-    }
-    .word-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    .word-table thead {
-      background: #4a8fff;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .word-table th {
-      padding: 12px;
-      text-align: left;
-      font-size: 16px;
-    }
-    .word-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #ddd;
-    }
-    .word-table tbody tr:hover {
-      background: #f0f8ff;
-    }
-    .word-col {
-      font-weight: bold;
-      color: #2c5aa0;
-      width: 30%;
-    }
-    .meaning-col {
-      color: #333;
-      width: 50%;
-    }
-    .action-col {
-      width: 20%;
-      text-align: center;
-    }
-    .speak-btn {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .speak-btn:hover {
-      background: #218838;
-    }
-    .bookmark-btn {
-      background: #ffc107;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-left: 5px;
-    }
-    .bookmark-btn:hover {
-      background: #e0a800;
-    }
-    .bookmark-btn.active {
-      background: #ff9800;
     }
     .total-count {
       font-size: 18px;
       color: #666;
       margin: 10px 0;
     }
-    .playing {
-      background: #fffacd !important;
-    }
-    #speedControl {
-      width: auto;
-      min-width: 150px;
-    }
-    #languageControl {
+    #speedControl, #languageControl {
       width: auto;
       min-width: 150px;
     }
@@ -176,6 +104,111 @@
       margin: 0;
       flex: 1;
       min-width: 100px;
+    }
+    
+    /* 아코디언 스타일 */
+    .alphabet-section {
+      margin: 15px 0;
+      border: 2px solid #4a8fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .alphabet-header {
+      background: #4a8fff;
+      color: white;
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+      user-select: none;
+    }
+    .alphabet-header:hover {
+      background: #3a7fee;
+    }
+    .alphabet-header .arrow {
+      transition: transform 0.3s;
+      font-size: 20px;
+    }
+    .alphabet-header.active .arrow {
+      transform: rotate(180deg);
+    }
+    .alphabet-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background: white;
+    }
+    .alphabet-content.active {
+      max-height: 3000px;
+      transition: max-height 0.5s ease-in;
+    }
+    .word-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .word-item:last-child {
+      border-bottom: none;
+    }
+    .word-item:hover {
+      background: #f0f8ff;
+    }
+    .word-item.playing {
+      background: #fffacd !important;
+    }
+    .word-info {
+      flex: 1;
+    }
+    .word-number {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .word-name {
+      font-weight: bold;
+      color: #2c5aa0;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    .word-meaning {
+      color: #666;
+      font-size: 14px;
+    }
+    .word-actions {
+      display: flex;
+      gap: 5px;
+    }
+    .speak-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .speak-btn:hover {
+      background: #218838;
+    }
+    .bookmark-btn {
+      background: #ffc107;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .bookmark-btn:hover {
+      background: #e0a800;
+    }
+    .bookmark-btn.active {
+      background: #ff9800;
     }
   </style>
 </head>
@@ -210,22 +243,13 @@
     </select>
   </div>
 
-  <!-- 단어 테이블 -->
-  <table class="word-table">
-    <thead>
-      <tr>
-        <th>번호</th>
-        <th class="word-col">영어 단어</th>
-        <th class="meaning-col">뜻</th>
-        <th class="action-col">동작</th>
-      </tr>
-    </thead>
-    <tbody id="wordListBody">
-      <tr>
-        <td colspan="4" style="text-align: center; padding: 40px;">단어를 불러오는 중...</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="controls" style="margin-top: 10px;">
+    <button onclick="expandAll()">📂 전체 펼치기</button>
+    <button onclick="collapseAll()">📁 전체 접기</button>
+  </div>
+
+  <!-- 알파벳별 아코디언 -->
+  <div id="accordionArea"></div>
 </div>
 
 <!-- 재생 중 고정 컨트롤 -->
@@ -242,27 +266,23 @@ let isPlaying = false;
 let isPaused = false;
 let currentPlayIndex = 0;
 let speechRate = 0.8;
-let playMode = 'en'; // 'en' 또는 'both'
+let playMode = 'en';
 
 // -----------------------------
 // 데이터 불러오기
 // -----------------------------
 async function loadData() {
   try {
-    // 단어 불러오기
     const response = await fetch('words.json');
     if (!response.ok) throw new Error('words.json 파일을 찾을 수 없습니다.');
     WORDS = await response.json();
     
-    // 즐겨찾기 불러오기
     const saved = localStorage.getItem('bookmarkedWords');
     if (saved) {
       bookmarkedWords = new Set(JSON.parse(saved));
     }
     
-    // 테이블 생성
-    renderWordList();
-    
+    renderAccordion();
     document.getElementById('totalCount').textContent = `총 ${WORDS.length}개의 단어`;
   } catch (error) {
     alert('데이터를 불러오는데 실패했습니다: ' + error.message);
@@ -271,33 +291,93 @@ async function loadData() {
 }
 
 // -----------------------------
-// 단어 목록 렌더링
+// 아코디언 렌더링
 // -----------------------------
-function renderWordList() {
-  const tbody = document.getElementById('wordListBody');
-  let html = '';
-  
+function renderAccordion() {
+  // 알파벳별로 그룹화
+  const grouped = {};
   WORDS.forEach((item, index) => {
-    const isBookmarked = bookmarkedWords.has(item.word);
-    const bookmarkClass = isBookmarked ? 'active' : '';
-    const bookmarkText = isBookmarked ? '⭐' : '☆';
+    item.originalIndex = index; // 원래 인덱스 저장
+    const firstLetter = item.word.charAt(0).toUpperCase();
+    if (!grouped[firstLetter]) {
+      grouped[firstLetter] = [];
+    }
+    grouped[firstLetter].push(item);
+  });
+  
+  // 알파벳 순서대로 정렬
+  const sortedLetters = Object.keys(grouped).sort();
+  
+  // HTML 생성
+  let html = '';
+  sortedLetters.forEach(letter => {
+    const words = grouped[letter];
+    html += `
+      <div class="alphabet-section">
+        <div class="alphabet-header" onclick="toggleSection('${letter}')">
+          <span>${letter} (${words.length}개)</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="alphabet-content" id="section-${letter}">
+    `;
+    
+    words.forEach(word => {
+      const isBookmarked = bookmarkedWords.has(word.word);
+      const bookmarkClass = isBookmarked ? 'active' : '';
+      const bookmarkText = isBookmarked ? '⭐' : '☆';
+      
+      html += `
+        <div class="word-item" id="word-${word.originalIndex}">
+          <div class="word-info">
+            <div class="word-number">#${word.originalIndex + 1}</div>
+            <div class="word-name">${word.word}</div>
+            <div class="word-meaning">${word.meaning.join(', ')}</div>
+          </div>
+          <div class="word-actions">
+            <button class="speak-btn" onclick="speakWord('${word.word}')">🔊</button>
+            <button class="bookmark-btn ${bookmarkClass}" onclick="toggleBookmark('${word.word}', ${word.originalIndex})">
+              ${bookmarkText}
+            </button>
+          </div>
+        </div>
+      `;
+    });
     
     html += `
-      <tr id="row_${index}">
-        <td>${index + 1}</td>
-        <td class="word-col">${item.word}</td>
-        <td class="meaning-col">${item.meaning.join(', ')}</td>
-        <td class="action-col">
-          <button class="speak-btn" onclick="speakWord('${item.word}')">🔊</button>
-          <button class="bookmark-btn ${bookmarkClass}" onclick="toggleBookmark('${item.word}', ${index})">
-            ${bookmarkText}
-          </button>
-        </td>
-      </tr>
+        </div>
+      </div>
     `;
   });
   
-  tbody.innerHTML = html;
+  document.getElementById('accordionArea').innerHTML = html;
+}
+
+// -----------------------------
+// 섹션 토글
+// -----------------------------
+function toggleSection(letter) {
+  const content = document.getElementById(`section-${letter}`);
+  const header = content.previousElementSibling;
+  
+  content.classList.toggle('active');
+  header.classList.toggle('active');
+}
+
+// -----------------------------
+// 전체 펼치기/접기
+// -----------------------------
+function expandAll() {
+  document.querySelectorAll('.alphabet-content').forEach(el => {
+    el.classList.add('active');
+    el.previousElementSibling.classList.add('active');
+  });
+}
+
+function collapseAll() {
+  document.querySelectorAll('.alphabet-content').forEach(el => {
+    el.classList.remove('active');
+    el.previousElementSibling.classList.remove('active');
+  });
 }
 
 // -----------------------------
@@ -325,7 +405,6 @@ function playAll() {
   isPaused = false;
   currentPlayIndex = 0;
   
-  // 버튼 상태 업데이트
   document.getElementById('playBtn').style.display = 'none';
   document.getElementById('pauseBtn').style.display = 'block';
   document.getElementById('resumeBtn').style.display = 'none';
@@ -338,31 +417,32 @@ function playAll() {
 }
 
 function playNext() {
-  if (!isPlaying || isPaused || currentPlayIndex >= WORDS.length) {
-    if (currentPlayIndex >= WORDS.length) {
-      stopPlay();
-    }
+  if (!isPlaying || isPaused) {
+    return;
+  }
+  
+  if (currentPlayIndex >= WORDS.length) {
+    stopPlay();
     return;
   }
   
   const currentWord = WORDS[currentPlayIndex];
   const word = currentWord.word;
   const meaning = currentWord.meaning.join(', ');
-  const row = document.getElementById(`row_${currentPlayIndex}`);
+  const wordEl = document.getElementById(`word-${currentPlayIndex}`);
   
-  // 이전 행 하이라이트 제거
-  document.querySelectorAll('.word-table tbody tr').forEach(tr => {
-    tr.classList.remove('playing');
+  // 이전 하이라이트 제거
+  document.querySelectorAll('.word-item').forEach(el => {
+    el.classList.remove('playing');
   });
   
-  // 현재 행 하이라이트 (스크롤 안 함)
-  if (row) {
-    row.classList.add('playing');
+  // 현재 하이라이트
+  if (wordEl) {
+    wordEl.classList.add('playing');
   }
   
-  // 발음 모드에 따라 처리
+  // 발음
   if (playMode === 'en') {
-    // 영어만
     speakText(word, 'en-US', () => {
       if (isPlaying && !isPaused) {
         currentPlayIndex++;
@@ -370,7 +450,6 @@ function playNext() {
       }
     });
   } else {
-    // 영어 + 한글
     speakText(word, 'en-US', () => {
       if (isPlaying && !isPaused) {
         setTimeout(() => {
@@ -403,7 +482,6 @@ function pausePlay() {
   isPaused = true;
   window.speechSynthesis.cancel();
   
-  // 버튼 상태 업데이트
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('resumeBtn').style.display = 'block';
   document.getElementById('fixedPauseBtn').style.display = 'none';
@@ -413,13 +491,11 @@ function pausePlay() {
 function resumePlay() {
   isPaused = false;
   
-  // 버튼 상태 업데이트
   document.getElementById('pauseBtn').style.display = 'block';
   document.getElementById('resumeBtn').style.display = 'none';
   document.getElementById('fixedPauseBtn').style.display = 'block';
   document.getElementById('fixedResumeBtn').style.display = 'none';
   
-  // 재생 재개
   playNext();
 }
 
@@ -428,29 +504,24 @@ function stopPlay() {
   isPaused = false;
   window.speechSynthesis.cancel();
   
-  // 버튼 상태 업데이트
   document.getElementById('playBtn').style.display = 'block';
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('resumeBtn').style.display = 'none';
   document.getElementById('stopBtn').style.display = 'none';
   document.getElementById('fixedControls').style.display = 'none';
   
-  // 하이라이트 제거
-  document.querySelectorAll('.word-table tbody tr').forEach(tr => {
-    tr.classList.remove('playing');
+  document.querySelectorAll('.word-item').forEach(el => {
+    el.classList.remove('playing');
   });
 }
 
 // -----------------------------
-// 속도 변경
+// 속도/언어 변경
 // -----------------------------
 function changeSpeed() {
   speechRate = parseFloat(document.getElementById('speedControl').value);
 }
 
-// -----------------------------
-// 언어 모드 변경
-// -----------------------------
 function changeLanguage() {
   playMode = document.getElementById('languageControl').value;
 }
@@ -465,11 +536,9 @@ function toggleBookmark(word, index) {
     bookmarkedWords.add(word);
   }
   
-  // localStorage에 저장
   localStorage.setItem('bookmarkedWords', JSON.stringify([...bookmarkedWords]));
   
-  // 버튼만 업데이트 (전체 렌더링 안 함)
-  const btn = document.querySelector(`#row_${index} .bookmark-btn`);
+  const btn = document.querySelector(`#word-${index} .bookmark-btn`);
   if (bookmarkedWords.has(word)) {
     btn.classList.add('active');
     btn.textContent = '⭐';
