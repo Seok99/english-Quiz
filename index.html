@@ -206,22 +206,66 @@
       <option value="english">영어 단어만 맞추기 (한글→영어)</option>
     </select>
 
-    <label>단어 범위 선택:</label>
-    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-      <input type="number" id="rangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
-      <span>~</span>
-      <input type="number" id="rangeEnd" placeholder="끝" min="1" style="width: 80px;" />
-      <button onclick="setFullRange()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+    <label>단어 선택 방식:</label>
+    <select id="quizSelectMode" onchange="changeQuizSelectMode()">
+      <option value="range">범위로 선택</option>
+      <option value="alphabet">알파벳으로 선택</option>
+    </select>
+
+    <!-- 범위 선택 -->
+    <div id="quizRangeSelect">
+      <label>단어 범위 선택:</label>
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+        <input type="number" id="rangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
+        <span>~</span>
+        <input type="number" id="rangeEnd" placeholder="끝" min="1" style="width: 80px;" />
+        <button onclick="setFullRange()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+      </div>
+
+      <label>문제 개수 선택 (최대 50):</label>
+      <select id="quizCount">
+        <option value="10">10개</option>
+        <option value="20">20개</option>
+        <option value="30">30개</option>
+        <option value="40">40개</option>
+        <option value="50">50개</option>
+      </select>
     </div>
 
-    <label>문제 개수 선택 (최대 50):</label>
-    <select id="quizCount">
-      <option value="10">10개</option>
-      <option value="20">20개</option>
-      <option value="30">30개</option>
-      <option value="40">40개</option>
-      <option value="50">50개</option>
-    </select>
+    <!-- 알파벳 선택 -->
+    <div id="quizAlphabetSelect" style="display:none;">
+      <label>시작 알파벳 선택:</label>
+      <select id="alphabetFilter" style="margin-top: 10px;">
+        <option value="">선택하세요</option>
+        <option value="a">A</option>
+        <option value="b">B</option>
+        <option value="c">C</option>
+        <option value="d">D</option>
+        <option value="e">E</option>
+        <option value="f">F</option>
+        <option value="g">G</option>
+        <option value="h">H</option>
+        <option value="i">I</option>
+        <option value="j">J</option>
+        <option value="k">K</option>
+        <option value="l">L</option>
+        <option value="m">M</option>
+        <option value="n">N</option>
+        <option value="o">O</option>
+        <option value="p">P</option>
+        <option value="q">Q</option>
+        <option value="r">R</option>
+        <option value="s">S</option>
+        <option value="t">T</option>
+        <option value="u">U</option>
+        <option value="v">V</option>
+        <option value="w">W</option>
+        <option value="x">X</option>
+        <option value="y">Y</option>
+        <option value="z">Z</option>
+      </select>
+      <div id="alphabetCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+    </div>
 
     <button onclick="startQuiz()">퀴즈 시작</button>
   </div>
@@ -235,21 +279,65 @@
       <option value="english">영어 단어만 맞추기 (한글→영어)</option>
     </select>
 
-    <label>단어 범위 선택:</label>
-    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-      <input type="number" id="testRangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
-      <span>~</span>
-      <input type="number" id="testRangeEnd" placeholder="끝" min="1" style="width: 80px;" />
-      <button onclick="setFullRangeTest()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+    <label>단어 선택 방식:</label>
+    <select id="testSelectMode" onchange="changeTestSelectMode()">
+      <option value="range">범위로 선택</option>
+      <option value="alphabet">알파벳으로 선택</option>
+    </select>
+
+    <!-- 범위 선택 -->
+    <div id="testRangeSelect">
+      <label>단어 범위 선택:</label>
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+        <input type="number" id="testRangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
+        <span>~</span>
+        <input type="number" id="testRangeEnd" placeholder="끝" min="1" style="width: 80px;" />
+        <button onclick="setFullRangeTest()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+      </div>
+
+      <label>문제 개수 선택:</label>
+      <select id="testCount">
+        <option value="20">20개</option>
+        <option value="30">30개</option>
+        <option value="40">40개</option>
+        <option value="50">50개</option>
+      </select>
     </div>
 
-    <label>문제 개수 선택:</label>
-    <select id="testCount">
-      <option value="20">20개</option>
-      <option value="30">30개</option>
-      <option value="40">40개</option>
-      <option value="50">50개</option>
-    </select>
+    <!-- 알파벳 선택 -->
+    <div id="testAlphabetSelect" style="display:none;">
+      <label>시작 알파벳 선택:</label>
+      <select id="testAlphabetFilter" onchange="updateTestAlphabetCount()" style="margin-top: 10px;">
+        <option value="">선택하세요</option>
+        <option value="a">A</option>
+        <option value="b">B</option>
+        <option value="c">C</option>
+        <option value="d">D</option>
+        <option value="e">E</option>
+        <option value="f">F</option>
+        <option value="g">G</option>
+        <option value="h">H</option>
+        <option value="i">I</option>
+        <option value="j">J</option>
+        <option value="k">K</option>
+        <option value="l">L</option>
+        <option value="m">M</option>
+        <option value="n">N</option>
+        <option value="o">O</option>
+        <option value="p">P</option>
+        <option value="q">Q</option>
+        <option value="r">R</option>
+        <option value="s">S</option>
+        <option value="t">T</option>
+        <option value="u">U</option>
+        <option value="v">V</option>
+        <option value="w">W</option>
+        <option value="x">X</option>
+        <option value="y">Y</option>
+        <option value="z">Z</option>
+      </select>
+      <div id="testAlphabetCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+    </div>
 
     <button onclick="startTest()">시험지 생성</button>
   </div>
@@ -363,6 +451,61 @@ function updateBookmarkButton() {
 loadBookmarks();
 
 // -----------------------------
+// 선택 모드 변경
+// -----------------------------
+function changeQuizSelectMode() {
+  const mode = document.getElementById('quizSelectMode').value;
+  if (mode === 'range') {
+    document.getElementById('quizRangeSelect').style.display = 'block';
+    document.getElementById('quizAlphabetSelect').style.display = 'none';
+  } else {
+    document.getElementById('quizRangeSelect').style.display = 'none';
+    document.getElementById('quizAlphabetSelect').style.display = 'block';
+    updateAlphabetCount();
+  }
+}
+
+function changeTestSelectMode() {
+  const mode = document.getElementById('testSelectMode').value;
+  if (mode === 'range') {
+    document.getElementById('testRangeSelect').style.display = 'block';
+    document.getElementById('testAlphabetSelect').style.display = 'none';
+  } else {
+    document.getElementById('testRangeSelect').style.display = 'none';
+    document.getElementById('testAlphabetSelect').style.display = 'block';
+    updateTestAlphabetCount();
+  }
+}
+
+function updateAlphabetCount() {
+  const letter = document.getElementById('alphabetFilter').value;
+  if (!letter) {
+    document.getElementById('alphabetCount').textContent = '';
+    return;
+  }
+  const count = WORDS.filter(w => w.word.toLowerCase().startsWith(letter)).length;
+  document.getElementById('alphabetCount').textContent = `${letter.toUpperCase()}로 시작하는 단어: ${count}개`;
+}
+
+function updateTestAlphabetCount() {
+  const letter = document.getElementById('testAlphabetFilter').value;
+  if (!letter) {
+    document.getElementById('testAlphabetCount').textContent = '';
+    return;
+  }
+  const count = WORDS.filter(w => w.word.toLowerCase().startsWith(letter)).length;
+  document.getElementById('testAlphabetCount').textContent = `${letter.toUpperCase()}로 시작하는 단어: ${count}개 (전체 출제)`;
+}
+
+// 알파벳 필터 변경 시 자동 업데이트
+document.addEventListener('DOMContentLoaded', () => {
+  const alphabetFilter = document.getElementById('alphabetFilter');
+  if (alphabetFilter) {
+    alphabetFilter.addEventListener('change', updateAlphabetCount);
+  }
+});
+
+// -----------------------------
 // 전체 범위 설정
 // -----------------------------
 function setFullRange() {
@@ -423,65 +566,88 @@ function startQuiz() {
     return;
   }
 
-  const count = Number(document.getElementById("quizCount").value);
   const mode = document.getElementById("quizMode").value;
-  const rangeStart = Number(document.getElementById("rangeStart").value);
-  const rangeEnd = Number(document.getElementById("rangeEnd").value);
+  const selectMode = document.getElementById("quizSelectMode").value;
   
-  // 범위 유효성 검사
-  if (!rangeStart || !rangeEnd) {
-    alert('단어 범위를 입력해주세요.');
-    return;
-  }
+  let selectedWords = [];
   
-  if (rangeStart < 1 || rangeEnd > WORDS.length) {
-    alert(`단어 범위는 1~${WORDS.length} 사이여야 합니다.`);
-    return;
-  }
-  
-  if (rangeStart > rangeEnd) {
-    alert('시작 번호가 끝 번호보다 클 수 없습니다.');
-    return;
+  if (selectMode === 'range') {
+    // 범위 선택 모드
+    const count = Number(document.getElementById("quizCount").value);
+    const rangeStart = Number(document.getElementById("rangeStart").value);
+    const rangeEnd = Number(document.getElementById("rangeEnd").value);
+    
+    // 범위 유효성 검사
+    if (!rangeStart || !rangeEnd) {
+      alert('단어 범위를 입력해주세요.');
+      return;
+    }
+    
+    if (rangeStart < 1 || rangeEnd > WORDS.length) {
+      alert(`단어 범위는 1~${WORDS.length} 사이여야 합니다.`);
+      return;
+    }
+    
+    if (rangeStart > rangeEnd) {
+      alert('시작 번호가 끝 번호보다 클 수 없습니다.');
+      return;
+    }
+
+    // 범위 내 단어 필터링
+    const rangeWords = WORDS.slice(rangeStart - 1, rangeEnd);
+    
+    // 단어 수 체크
+    if (rangeWords.length < count) {
+      alert(`선택한 범위에 ${rangeWords.length}개의 단어만 있습니다. 문제 개수를 줄여주세요.`);
+      return;
+    }
+    
+    selectedWords = [...rangeWords].sort(() => Math.random() - 0.5).slice(0, count);
+    totalCount = count;
+    
+  } else {
+    // 알파벳 선택 모드
+    const letter = document.getElementById('alphabetFilter').value;
+    
+    if (!letter) {
+      alert('알파벳을 선택해주세요.');
+      return;
+    }
+    
+    // 해당 알파벳으로 시작하는 단어 필터링
+    selectedWords = WORDS.filter(w => w.word.toLowerCase().startsWith(letter));
+    
+    if (selectedWords.length === 0) {
+      alert(`${letter.toUpperCase()}로 시작하는 단어가 없습니다.`);
+      return;
+    }
+    
+    // 섞기
+    selectedWords = [...selectedWords].sort(() => Math.random() - 0.5);
+    totalCount = selectedWords.length;
   }
 
-  // 범위 내 단어 필터링
-  const rangeWords = WORDS.slice(rangeStart - 1, rangeEnd);
-  
-  // 단어 수 체크
-  if (rangeWords.length < count) {
-    alert(`선택한 범위에 ${rangeWords.length}개의 단어만 있습니다. 문제 개수를 줄여주세요.`);
-    return;
-  }
-  
-  totalCount = count;
-
-  // 리스트 섞기
-  quizList = [...rangeWords]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, count)
-    .map(item => {
-      let isWordMode;
-      
-      // 문제 유형에 따라 설정
-      if (mode === "korean") {
-        // 한글 뜻만 맞추기: 영어 단어 제시 → 한글 답
-        isWordMode = true;
-      } else if (mode === "english") {
-        // 영어 단어만 맞추기: 한글 뜻 제시 → 영어 답
-        isWordMode = false;
-      } else {
-        // 혼합: 랜덤
-        isWordMode = Math.random() < 0.5;
-      }
-      
-      return {
-        question: isWordMode ? item.word : item.meaning.join(", "),
-        answerList: isWordMode ? item.meaning : [item.word],
-        fullMeaning: item.meaning,
-        originalWord: item.word,
-        isWordMode: isWordMode
-      };
-    });
+  // 리스트 생성
+  quizList = selectedWords.map(item => {
+    let isWordMode;
+    
+    // 문제 유형에 따라 설정
+    if (mode === "korean") {
+      isWordMode = true;
+    } else if (mode === "english") {
+      isWordMode = false;
+    } else {
+      isWordMode = Math.random() < 0.5;
+    }
+    
+    return {
+      question: isWordMode ? item.word : item.meaning.join(", "),
+      answerList: isWordMode ? item.meaning : [item.word],
+      fullMeaning: item.meaning,
+      originalWord: item.word,
+      isWordMode: isWordMode
+    };
+  });
 
   currentIndex = 0;
   document.getElementById("quizArea").style.display = "block";
@@ -592,61 +758,87 @@ function startTest() {
     return;
   }
 
-  const count = Number(document.getElementById("testCount").value);
   const mode = document.getElementById("testMode").value;
-  const rangeStart = Number(document.getElementById("testRangeStart").value);
-  const rangeEnd = Number(document.getElementById("testRangeEnd").value);
+  const selectMode = document.getElementById("testSelectMode").value;
   
-  // 범위 유효성 검사
-  if (!rangeStart || !rangeEnd) {
-    alert('단어 범위를 입력해주세요.');
-    return;
-  }
+  let selectedWords = [];
   
-  if (rangeStart < 1 || rangeEnd > WORDS.length) {
-    alert(`단어 범위는 1~${WORDS.length} 사이여야 합니다.`);
-    return;
-  }
-  
-  if (rangeStart > rangeEnd) {
-    alert('시작 번호가 끝 번호보다 클 수 없습니다.');
-    return;
-  }
+  if (selectMode === 'range') {
+    // 범위 선택 모드
+    const count = Number(document.getElementById("testCount").value);
+    const rangeStart = Number(document.getElementById("testRangeStart").value);
+    const rangeEnd = Number(document.getElementById("testRangeEnd").value);
+    
+    // 범위 유효성 검사
+    if (!rangeStart || !rangeEnd) {
+      alert('단어 범위를 입력해주세요.');
+      return;
+    }
+    
+    if (rangeStart < 1 || rangeEnd > WORDS.length) {
+      alert(`단어 범위는 1~${WORDS.length} 사이여야 합니다.`);
+      return;
+    }
+    
+    if (rangeStart > rangeEnd) {
+      alert('시작 번호가 끝 번호보다 클 수 없습니다.');
+      return;
+    }
 
-  // 범위 내 단어 필터링
-  const rangeWords = WORDS.slice(rangeStart - 1, rangeEnd);
-  
-  // 단어 수 체크
-  if (rangeWords.length < count) {
-    alert(`선택한 범위에 ${rangeWords.length}개의 단어만 있습니다. 문제 개수를 줄여주세요.`);
-    return;
+    // 범위 내 단어 필터링
+    const rangeWords = WORDS.slice(rangeStart - 1, rangeEnd);
+    
+    // 단어 수 체크
+    if (rangeWords.length < count) {
+      alert(`선택한 범위에 ${rangeWords.length}개의 단어만 있습니다. 문제 개수를 줄여주세요.`);
+      return;
+    }
+    
+    selectedWords = [...rangeWords].sort(() => Math.random() - 0.5).slice(0, count);
+    
+  } else {
+    // 알파벳 선택 모드
+    const letter = document.getElementById('testAlphabetFilter').value;
+    
+    if (!letter) {
+      alert('알파벳을 선택해주세요.');
+      return;
+    }
+    
+    // 해당 알파벳으로 시작하는 단어 필터링
+    selectedWords = WORDS.filter(w => w.word.toLowerCase().startsWith(letter));
+    
+    if (selectedWords.length === 0) {
+      alert(`${letter.toUpperCase()}로 시작하는 단어가 없습니다.`);
+      return;
+    }
+    
+    // 섞기
+    selectedWords = [...selectedWords].sort(() => Math.random() - 0.5);
   }
 
   // 시험지 리스트 생성
-  testList = [...rangeWords]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, count)
-    .map((item, index) => {
-      let isWordMode;
-      
-      if (mode === "korean") {
-        isWordMode = true;
-      } else if (mode === "english") {
-        isWordMode = false;
-      } else {
-        isWordMode = Math.random() < 0.5;
-      }
-      
-      return {
-        id: index,
-        question: isWordMode ? item.word : item.meaning.join(", "),
-        correctAnswer: isWordMode ? item.meaning : [item.word],
-        fullMeaning: item.meaning,
-        originalWord: item.word,
-        isWordMode: isWordMode,
-        userAnswer: ""
-      };
-    });
+  testList = selectedWords.map((item, index) => {
+    let isWordMode;
+    
+    if (mode === "korean") {
+      isWordMode = true;
+    } else if (mode === "english") {
+      isWordMode = false;
+    } else {
+      isWordMode = Math.random() < 0.5;
+    }
+    
+    return {
+      id: index,
+      question: isWordMode ? item.word : item.meaning.join(", "),
+      correctAnswer: isWordMode ? item.meaning : [item.word],
+      fullMeaning: item.meaning,
+      originalWord: item.word,
+      isWordMode: isWordMode,
+      userAnswer: ""
+    };
+  });
 
   createTestTable();
   
