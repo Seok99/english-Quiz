@@ -78,68 +78,6 @@
       flex: 1;
       min-width: 150px;
     }
-    .word-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    .word-table thead {
-      background: #ff9800;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .word-table th {
-      padding: 12px;
-      text-align: left;
-      font-size: 16px;
-    }
-    .word-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #ddd;
-    }
-    .word-table tbody tr:hover {
-      background: #fff8e1;
-    }
-    .word-col {
-      font-weight: bold;
-      color: #e65100;
-      width: 30%;
-    }
-    .meaning-col {
-      color: #333;
-      width: 50%;
-    }
-    .action-col {
-      width: 20%;
-      text-align: center;
-    }
-    .speak-btn {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .speak-btn:hover {
-      background: #218838;
-    }
-    .remove-btn {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-left: 5px;
-    }
-    .remove-btn:hover {
-      background: #c82333;
-    }
     .total-count {
       font-size: 18px;
       color: #666;
@@ -156,17 +94,104 @@
       width: auto;
       padding: 12px 30px;
     }
-    .playing {
-      background: #fffacd !important;
-    }
-    #speedControl {
-      width: auto;
-      min-width: 150px;
-    }
     .clear-all-btn {
       background: #dc3545;
     }
     .clear-all-btn:hover {
+      background: #c82333;
+    }
+    
+    /* 아코디언 스타일 */
+    .alphabet-section {
+      margin: 15px 0;
+      border: 2px solid #ff9800;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .alphabet-header {
+      background: #ff9800;
+      color: white;
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      font-weight: bold;
+      user-select: none;
+    }
+    .alphabet-header:hover {
+      background: #f57c00;
+    }
+    .alphabet-header .arrow {
+      transition: transform 0.3s;
+      font-size: 20px;
+    }
+    .alphabet-header.active .arrow {
+      transform: rotate(180deg);
+    }
+    .alphabet-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background: white;
+    }
+    .alphabet-content.active {
+      max-height: 2000px;
+      transition: max-height 0.5s ease-in;
+    }
+    .word-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .word-item:last-child {
+      border-bottom: none;
+    }
+    .word-item:hover {
+      background: #fff8e1;
+    }
+    .word-info {
+      flex: 1;
+    }
+    .word-name {
+      font-weight: bold;
+      color: #e65100;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    .word-meaning {
+      color: #666;
+      font-size: 14px;
+    }
+    .word-actions {
+      display: flex;
+      gap: 5px;
+    }
+    .speak-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .speak-btn:hover {
+      background: #218838;
+    }
+    .remove-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .remove-btn:hover {
       background: #c82333;
     }
   </style>
@@ -187,36 +212,18 @@
 
   <!-- 컨트롤 버튼 -->
   <div class="controls" id="controlsArea" style="display:none;">
-    <button onclick="playAll()" id="playBtn">▶️ 순차 재생 시작</button>
-    <button onclick="stopPlay()" id="stopBtn" style="background: #dc3545; display: none;">⏹️ 재생 중지</button>
-    <select id="speedControl" onchange="changeSpeed()">
-      <option value="0.6">느리게 (0.6x)</option>
-      <option value="0.8" selected>보통 (0.8x)</option>
-      <option value="1.0">빠르게 (1.0x)</option>
-    </select>
+    <button onclick="expandAll()">📂 전체 펼치기</button>
+    <button onclick="collapseAll()">📁 전체 접기</button>
     <button onclick="clearAllBookmarks()" class="clear-all-btn">🗑️ 전체 삭제</button>
   </div>
 
-  <!-- 단어 테이블 -->
-  <div id="contentArea">
-    <table class="word-table" id="wordTable" style="display:none;">
-      <thead>
-        <tr>
-          <th>번호</th>
-          <th class="word-col">영어 단어</th>
-          <th class="meaning-col">뜻</th>
-          <th class="action-col">동작</th>
-        </tr>
-      </thead>
-      <tbody id="wordListBody">
-      </tbody>
-    </table>
+  <!-- 알파벳별 아코디언 -->
+  <div id="accordionArea"></div>
 
-    <div class="empty-message" id="emptyMessage">
-      <div>⭐ 즐겨찾기한 단어가 없습니다.</div>
-      <div style="margin-top: 10px; color: #bbb;">퀴즈나 전체 단어 페이지에서 단어를 즐겨찾기에 추가해보세요!</div>
-      <button onclick="location.href='wordlist.html'">📚 전체 단어 보러가기</button>
-    </div>
+  <div class="empty-message" id="emptyMessage" style="display:none;">
+    <div>⭐ 즐겨찾기한 단어가 없습니다.</div>
+    <div style="margin-top: 10px; color: #bbb;">퀴즈나 전체 단어 페이지에서 단어를 즐겨찾기에 추가해보세요!</div>
+    <button onclick="location.href='wordlist.html'">📚 전체 단어 보러가기</button>
   </div>
 </div>
 
@@ -224,9 +231,6 @@
 let WORDS = [];
 let bookmarkedWords = new Set();
 let bookmarkedWordsList = [];
-let isPlaying = false;
-let currentPlayIndex = 0;
-let speechRate = 0.8;
 
 // -----------------------------
 // 데이터 불러오기
@@ -251,7 +255,7 @@ async function loadData() {
     if (bookmarkedWordsList.length === 0) {
       showEmptyMessage();
     } else {
-      renderWordList();
+      renderAccordion();
     }
     
     updateCount();
@@ -266,36 +270,94 @@ async function loadData() {
 // -----------------------------
 function showEmptyMessage() {
   document.getElementById('emptyMessage').style.display = 'block';
-  document.getElementById('wordTable').style.display = 'none';
+  document.getElementById('accordionArea').style.display = 'none';
   document.getElementById('controlsArea').style.display = 'none';
 }
 
 // -----------------------------
-// 단어 목록 렌더링
+// 아코디언 렌더링
 // -----------------------------
-function renderWordList() {
+function renderAccordion() {
   document.getElementById('emptyMessage').style.display = 'none';
-  document.getElementById('wordTable').style.display = 'table';
+  document.getElementById('accordionArea').style.display = 'block';
   document.getElementById('controlsArea').style.display = 'flex';
   
-  const tbody = document.getElementById('wordListBody');
-  let html = '';
+  // 알파벳별로 그룹화
+  const grouped = {};
+  bookmarkedWordsList.forEach(item => {
+    const firstLetter = item.word.charAt(0).toUpperCase();
+    if (!grouped[firstLetter]) {
+      grouped[firstLetter] = [];
+    }
+    grouped[firstLetter].push(item);
+  });
   
-  bookmarkedWordsList.forEach((item, index) => {
+  // 알파벳 순서대로 정렬
+  const sortedLetters = Object.keys(grouped).sort();
+  
+  // HTML 생성
+  let html = '';
+  sortedLetters.forEach(letter => {
+    const words = grouped[letter];
     html += `
-      <tr id="row_${index}">
-        <td>${index + 1}</td>
-        <td class="word-col">${item.word}</td>
-        <td class="meaning-col">${item.meaning.join(', ')}</td>
-        <td class="action-col">
-          <button class="speak-btn" onclick="speakWord('${item.word}')">🔊</button>
-          <button class="remove-btn" onclick="removeBookmark('${item.word}')">❌</button>
-        </td>
-      </tr>
+      <div class="alphabet-section">
+        <div class="alphabet-header" onclick="toggleSection('${letter}')">
+          <span>${letter} (${words.length}개)</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="alphabet-content" id="section-${letter}">
+    `;
+    
+    words.forEach(word => {
+      html += `
+        <div class="word-item">
+          <div class="word-info">
+            <div class="word-name">${word.word}</div>
+            <div class="word-meaning">${word.meaning.join(', ')}</div>
+          </div>
+          <div class="word-actions">
+            <button class="speak-btn" onclick="speakWord('${word.word}')">🔊</button>
+            <button class="remove-btn" onclick="removeBookmark('${word.word}')">❌</button>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += `
+        </div>
+      </div>
     `;
   });
   
-  tbody.innerHTML = html;
+  document.getElementById('accordionArea').innerHTML = html;
+}
+
+// -----------------------------
+// 섹션 토글
+// -----------------------------
+function toggleSection(letter) {
+  const content = document.getElementById(`section-${letter}`);
+  const header = content.previousElementSibling;
+  
+  content.classList.toggle('active');
+  header.classList.toggle('active');
+}
+
+// -----------------------------
+// 전체 펼치기/접기
+// -----------------------------
+function expandAll() {
+  document.querySelectorAll('.alphabet-content').forEach(el => {
+    el.classList.add('active');
+    el.previousElementSibling.classList.add('active');
+  });
+}
+
+function collapseAll() {
+  document.querySelectorAll('.alphabet-content').forEach(el => {
+    el.classList.remove('active');
+    el.previousElementSibling.classList.remove('active');
+  });
 }
 
 // -----------------------------
@@ -312,85 +374,10 @@ function updateCount() {
 function speakWord(word) {
   const utterance = new SpeechSynthesisUtterance(word);
   utterance.lang = 'en-US';
-  utterance.rate = speechRate;
+  utterance.rate = 0.8;
   
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
-}
-
-// -----------------------------
-// 순차 재생
-// -----------------------------
-function playAll() {
-  if (bookmarkedWordsList.length === 0) {
-    alert('즐겨찾기한 단어가 없습니다.');
-    return;
-  }
-  
-  isPlaying = true;
-  currentPlayIndex = 0;
-  
-  document.getElementById('playBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = 'block';
-  
-  playNext();
-}
-
-function playNext() {
-  if (!isPlaying || currentPlayIndex >= bookmarkedWordsList.length) {
-    stopPlay();
-    return;
-  }
-  
-  const word = bookmarkedWordsList[currentPlayIndex].word;
-  const row = document.getElementById(`row_${currentPlayIndex}`);
-  
-  // 이전 행 하이라이트 제거
-  document.querySelectorAll('.word-table tbody tr').forEach(tr => {
-    tr.classList.remove('playing');
-  });
-  
-  // 현재 행 하이라이트
-  if (row) {
-    row.classList.add('playing');
-    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-  
-  // 발음
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = 'en-US';
-  utterance.rate = speechRate;
-  
-  utterance.onend = () => {
-    if (isPlaying) {
-      currentPlayIndex++;
-      // 다음 단어까지 0.5초 대기
-      setTimeout(playNext, 500);
-    }
-  };
-  
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-}
-
-function stopPlay() {
-  isPlaying = false;
-  window.speechSynthesis.cancel();
-  
-  document.getElementById('playBtn').style.display = 'block';
-  document.getElementById('stopBtn').style.display = 'none';
-  
-  // 하이라이트 제거
-  document.querySelectorAll('.word-table tbody tr').forEach(tr => {
-    tr.classList.remove('playing');
-  });
-}
-
-// -----------------------------
-// 속도 변경
-// -----------------------------
-function changeSpeed() {
-  speechRate = parseFloat(document.getElementById('speedControl').value);
 }
 
 // -----------------------------
@@ -403,11 +390,6 @@ function removeBookmark(word) {
   
   bookmarkedWords.delete(word);
   localStorage.setItem('bookmarkedWords', JSON.stringify([...bookmarkedWords]));
-  
-  // 재생 중이면 중지
-  if (isPlaying) {
-    stopPlay();
-  }
   
   // 다시 불러오기
   loadData();
@@ -428,11 +410,6 @@ function clearAllBookmarks() {
   
   bookmarkedWords.clear();
   localStorage.setItem('bookmarkedWords', JSON.stringify([]));
-  
-  // 재생 중이면 중지
-  if (isPlaying) {
-    stopPlay();
-  }
   
   // 다시 불러오기
   loadData();
