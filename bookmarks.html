@@ -163,10 +163,21 @@
       color: #e65100;
       font-size: 18px;
       margin-bottom: 5px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+    .word-name:hover {
+      color: #bf360c;
     }
     .word-meaning {
       color: #666;
       font-size: 14px;
+      display: none;
+      margin-top: 5px;
+    }
+    .word-meaning.show {
+      display: block;
     }
     .word-actions {
       display: flex;
@@ -310,12 +321,12 @@ function renderAccordion() {
         <div class="alphabet-content" id="section-${letter}">
     `;
     
-    words.forEach(word => {
+    words.forEach((word, idx) => {
       html += `
         <div class="word-item">
           <div class="word-info">
-            <div class="word-name">${word.word}</div>
-            <div class="word-meaning">${word.meaning.join(', ')}</div>
+            <div class="word-name" onclick="toggleMeaning('${letter}-${idx}')">${word.word}</div>
+            <div class="word-meaning" id="meaning-${letter}-${idx}">${word.meaning.join(', ')}</div>
           </div>
           <div class="word-actions">
             <button class="speak-btn" onclick="speakWord('${word.word}')">🔊</button>
@@ -360,6 +371,16 @@ function collapseAll() {
     el.classList.remove('active');
     el.previousElementSibling.classList.remove('active');
   });
+}
+
+// -----------------------------
+// 뜻 토글
+// -----------------------------
+function toggleMeaning(id) {
+  const meaningEl = document.getElementById(`meaning-${id}`);
+  if (meaningEl) {
+    meaningEl.classList.toggle('show');
+  }
 }
 
 // -----------------------------
