@@ -181,6 +181,17 @@
       color: #666;
       font-size: 14px;
     }
+    .word-meaning.hidden {
+      display: none;
+    }
+    .word-name.clickable {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+    .word-name.clickable:hover {
+      color: #1a4d8f;
+    }
     .word-actions {
       display: flex;
       gap: 5px;
@@ -248,6 +259,7 @@
   <div class="controls" style="margin-top: 10px;">
     <button onclick="expandAll()">📂 전체 펼치기</button>
     <button onclick="collapseAll()">📁 전체 접기</button>
+    <button onclick="toggleMeaningDisplay()" id="toggleMeaningBtn">👁️ 뜻 숨기기</button>
   </div>
 
   <!-- 알파벳별 아코디언 -->
@@ -269,6 +281,7 @@ let isPaused = false;
 let currentPlayIndex = 0;
 let speechRate = 0.8;
 let playMode = 'en';
+let meaningHidden = false;
 
 // -----------------------------
 // 데이터 불러오기
@@ -327,13 +340,15 @@ function renderAccordion() {
       const isBookmarked = bookmarkedWords.has(word.word);
       const bookmarkClass = isBookmarked ? 'active' : '';
       const bookmarkText = isBookmarked ? '⭐' : '☆';
+      const meaningClass = meaningHidden ? 'hidden' : '';
+      const wordNameClass = meaningHidden ? 'clickable' : '';
       
       html += `
         <div class="word-item" id="word-${word.originalIndex}">
           <div class="word-info">
             <div class="word-number">#${word.originalIndex + 1}</div>
-            <div class="word-name">${word.word}</div>
-            <div class="word-meaning">${word.meaning.join(', ')}</div>
+            <div class="word-name ${wordNameClass}" onclick="${meaningHidden ? `toggleIndividualMeaning(${word.originalIndex})` : ''}">${word.word}</div>
+            <div class="word-meaning ${meaningClass}" id="meaning-${word.originalIndex}">${word.meaning.join(', ')}</div>
           </div>
           <div class="word-actions">
             <button class="speak-btn" onclick="speakWord('${word.word}')">🔊</button>
@@ -547,6 +562,49 @@ function toggleBookmark(word, index) {
   } else {
     btn.classList.remove('active');
     btn.textContent = '☆';
+  }
+}
+
+// -----------------------------
+// 뜻 표시 토글
+// -----------------------------
+function toggleMeaningDisplay() {
+  meaningHidden = !meaningHidden;
+  const btn = document.getElementById('toggleMeaningBtn');
+  
+  if (meaningHidden) {
+    btn.textContent = '뜻 보이기';
+    // 모든 뜻 숨기기
+    document.querySelectorAll('.word-meaning').forEach(el => {
+      el.classList.add('hidden');
+    });
+    // 모든 단어를 클릭 가능하게
+    document.querySelectorAll('.word-name').forEach(el => {
+      el.classList.add('clickable');
+      const wordId = el.parentElement.parentElement.id.replace('word-', '');
+      el.setAttribute('onclick', `toggleIndividualMeaning(${wordId})`);
+    });
+  } else {
+    btn.textContent = '뜻 숨기기';
+    // 모든 뜻 보이기
+    document.querySelectorAll('.word-meaning').forEach(el => {
+      el.classList.remove('hidden');
+    });
+    // 클릭 기능 제거
+    document.querySelectorAll('.word-name').forEach(el => {
+      el.classList.remove('clickable');
+      el.removeAttribute('onclick');
+    });
+  }
+}
+
+// -----------------------------
+// 개별 단어 뜻 토글
+// -----------------------------
+function toggleIndividualMeaning(index) {
+  const meaningEl = document.getElementById(`meaning-${index}`);
+  if (meaningEl) {
+    meaningEl.classList.toggle('hidden');
   }
 }
 
