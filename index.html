@@ -172,6 +172,7 @@
       margin: 10px 0;
       font-size: 16px;
       color: #666;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -404,6 +405,9 @@ let totalCount = 0;
 let testList = [];
 let currentMode = 'quiz';
 let bookmarkedWords = new Set();
+let quizCorrectCount = 0;
+let quizWrongCount = 0;
+let isAnswerChecked = false;
 
 // -----------------------------
 // 즐겨찾기 관리
@@ -650,6 +654,8 @@ function startQuiz() {
   });
 
   currentIndex = 0;
+  quizCorrectCount = 0;
+  quizWrongCount = 0;
   document.getElementById("quizArea").style.display = "block";
   document.getElementById("result").innerHTML = "";
   document.getElementById("nextBtn").style.display = "none";
@@ -661,8 +667,9 @@ function startQuiz() {
 // -----------------------------
 function showQuestion() {
   currentQuiz = quizList[currentIndex];
+  isAnswerChecked = false;
   document.getElementById("progress").textContent = 
-    `진행: ${currentIndex + 1} / ${totalCount}`;
+    `진행: ${currentIndex + 1} / ${totalCount} | 정답: ${quizCorrectCount}개 | 오답: ${quizWrongCount}개`;
   document.getElementById("question").textContent =
     `문제 ${currentIndex + 1}: ${currentQuiz.question}`;
   document.getElementById("answerInput").value = "";
@@ -678,6 +685,11 @@ function showQuestion() {
 // 답안 체크
 // -----------------------------
 function checkAnswer() {
+  // 이미 체크한 경우 무시
+  if (isAnswerChecked) {
+    return;
+  }
+
   const user = document.getElementById("answerInput").value.trim();
   if (!user) {
     alert("답을 입력해주세요!");
@@ -702,18 +714,27 @@ function checkAnswer() {
   );
 
   if (isCorrect) {
+    quizCorrectCount++;
     result.innerHTML =
       `⭕ <b>정답입니다!</b><br>
       입력한 답: ${user}<br>
       맞는 정답: ${matchedMeaning.join(", ")}<br>
       ${otherMeanings.length > 0 ? `다른 뜻들: ${otherMeanings.join(", ")}` : ''}`;
   } else {
+    quizWrongCount++;
     result.innerHTML =
       `❌ <b>오답입니다.</b><br>
       입력한 답: ${user}<br>
       정답: ${currentQuiz.answerList.join(", ")}<br>
       전체 뜻: ${currentQuiz.fullMeaning.join(", ")}`;
   }
+
+  // 답변 체크 완료 표시
+  isAnswerChecked = true;
+
+  // 진행률 업데이트 (정답/오답 수 반영)
+  document.getElementById("progress").textContent = 
+    `진행: ${currentIndex + 1} / ${totalCount} | 정답: ${quizCorrectCount}개 | 오답: ${quizWrongCount}개`;
 
   // 다음 버튼 표시
   document.getElementById("nextBtn").style.display = "block";
@@ -725,7 +746,8 @@ function checkAnswer() {
 function nextQuestion() {
   currentIndex++;
   if (currentIndex >= quizList.length) {
-    alert("퀴즈 완료! 수고하셨습니다!");
+    const totalScore = Math.round((quizCorrectCount / totalCount) * 100);
+    alert(`퀴즈 완료!\n\n총 ${totalCount}문제 중\n정답: ${quizCorrectCount}개\n오답: ${quizWrongCount}개\n\n점수: ${totalScore}점\n\n수고하셨습니다!`);
     document.getElementById("quizArea").style.display = "none";
     return;
   }
