@@ -106,46 +106,68 @@
       min-width: 100px;
     }
     
-    /* 아코디언 스타일 */
-    .alphabet-section {
-      margin: 15px 0;
+    /* 알파벳 그리드 */
+    .alphabet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .alphabet-btn {
+      padding: 15px 10px;
+      background: #e8f4f8;
       border: 2px solid #4a8fff;
       border-radius: 8px;
-      overflow: hidden;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
     }
-    .alphabet-header {
+    .alphabet-btn:hover {
+      background: #d0e8f8;
+      transform: translateY(-2px);
+    }
+    .alphabet-btn.active {
       background: #4a8fff;
       color: white;
-      padding: 15px 20px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 18px;
-      font-weight: bold;
-      user-select: none;
     }
-    .alphabet-header:hover {
-      background: #3a7fee;
+    .alphabet-letter {
+      font-size: 24px;
+      display: block;
     }
-    .alphabet-header .arrow {
-      transition: transform 0.3s;
-      font-size: 20px;
+    .alphabet-count {
+      font-size: 12px;
+      color: #666;
+      margin-top: 3px;
     }
-    .alphabet-header.active .arrow {
-      transform: rotate(180deg);
+    .alphabet-btn.active .alphabet-count {
+      color: #fff;
     }
-    .alphabet-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
+    
+    /* 단어 목록 */
+    .word-list {
+      margin-top: 20px;
+      max-height: 600px;
+      overflow-y: auto;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
       background: white;
     }
-    .alphabet-content.active {
-      max-height: 500px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      transition: max-height 0.3s ease-in;
+    .word-list::-webkit-scrollbar {
+      width: 10px;
+    }
+    .word-list::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 8px;
+    }
+    .word-list::-webkit-scrollbar-thumb {
+      background: #4a8fff;
+      border-radius: 8px;
+    }
+    .word-list::-webkit-scrollbar-thumb:hover {
+      background: #3a7fee;
     }
     .word-item {
       padding: 15px 20px;
@@ -153,9 +175,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: white;
+    }
+    .word-item:first-child {
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
     }
     .word-item:last-child {
       border-bottom: none;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
     }
     .word-item:hover {
       background: #f0f8ff;
@@ -223,6 +252,16 @@
     .bookmark-btn.active {
       background: #ff9800;
     }
+    .current-filter {
+      font-size: 16px;
+      color: #4a8fff;
+      font-weight: bold;
+      margin: 15px 0;
+      padding: 10px;
+      background: #f0f8ff;
+      border-radius: 5px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -257,13 +296,18 @@
   </div>
 
   <div class="controls" style="margin-top: 10px;">
-    <button onclick="expandAll()">📂 전체 펼치기</button>
-    <button onclick="collapseAll()">📁 전체 접기</button>
+    <button onclick="clearFilter()" id="clearBtn" style="display: none;">🔄 목록 닫기</button>
     <button onclick="toggleMeaningDisplay()" id="toggleMeaningBtn">👁️ 뜻 숨기기</button>
   </div>
 
-  <!-- 알파벳별 아코디언 -->
-  <div id="accordionArea"></div>
+  <!-- 알파벳 그리드 -->
+  <div class="alphabet-grid" id="alphabetGrid"></div>
+
+  <!-- 현재 필터 표시 -->
+  <div class="current-filter" id="currentFilter" style="display: none;"></div>
+
+  <!-- 단어 목록 -->
+  <div class="word-list" id="wordList"></div>
 </div>
 
 <!-- 재생 중 고정 컨트롤 -->
@@ -282,6 +326,9 @@ let currentPlayIndex = 0;
 let speechRate = 0.8;
 let playMode = 'en';
 let meaningHidden = false;
+let currentFilter = null; // 현재 선택된 알파벳
+let groupedWords = {}; // 알파벳별 그룹화된 단어
+let currentDisplayWords = []; // 현재 표시 중인 단어들
 
 // -----------------------------
 // 데이터 불러오기
@@ -297,7 +344,19 @@ async function loadData() {
       bookmarkedWords = new Set(JSON.parse(saved));
     }
     
-    renderAccordion();
+    // 알파벳별로 그룹화
+    WORDS.forEach((item, index) => {
+      item.originalIndex = index;
+      const firstLetter = item.word.charAt(0).toUpperCase();
+      if (!groupedWords[firstLetter]) {
+        groupedWords[firstLetter] = [];
+      }
+      groupedWords[firstLetter].push(item);
+    });
+    
+    renderAlphabetGrid();
+    clearFilter(); // 초기에는 단어 목록 비우기
+    
     document.getElementById('totalCount').textContent = `총 ${WORDS.length}개의 단어`;
   } catch (error) {
     alert('데이터를 불러오는데 실패했습니다: ' + error.message);
@@ -306,37 +365,86 @@ async function loadData() {
 }
 
 // -----------------------------
-// 아코디언 렌더링
+// 알파벳 그리드 렌더링
 // -----------------------------
-function renderAccordion() {
-  // 알파벳별로 그룹화
-  const grouped = {};
-  WORDS.forEach((item, index) => {
-    item.originalIndex = index; // 원래 인덱스 저장
-    const firstLetter = item.word.charAt(0).toUpperCase();
-    if (!grouped[firstLetter]) {
-      grouped[firstLetter] = [];
-    }
-    grouped[firstLetter].push(item);
+function renderAlphabetGrid() {
+  const sortedLetters = Object.keys(groupedWords).sort();
+  let html = '';
+  
+  sortedLetters.forEach(letter => {
+    const count = groupedWords[letter].length;
+    html += `
+      <div class="alphabet-btn" onclick="filterByAlphabet('${letter}')">
+        <span class="alphabet-letter">${letter}</span>
+        <span class="alphabet-count">${count}개</span>
+      </div>
+    `;
   });
   
-  // 알파벳 순서대로 정렬
-  const sortedLetters = Object.keys(grouped).sort();
+  document.getElementById('alphabetGrid').innerHTML = html;
+}
+
+// -----------------------------
+// 알파벳 필터
+// -----------------------------
+function filterByAlphabet(letter) {
+  // 같은 알파벳을 다시 클릭하면 목록 닫기
+  if (currentFilter === letter) {
+    clearFilter();
+    return;
+  }
   
-  // HTML 생성
+  currentFilter = letter;
+  currentDisplayWords = groupedWords[letter] || [];
+  
+  // 알파벳 버튼 활성화 상태 변경
+  document.querySelectorAll('.alphabet-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.closest('.alphabet-btn').classList.add('active');
+  
+  // 필터 표시
+  document.getElementById('currentFilter').style.display = 'block';
+  document.getElementById('currentFilter').textContent = `${letter}로 시작하는 단어 (${currentDisplayWords.length}개)`;
+  
+  // 목록 닫기 버튼 표시
+  document.getElementById('clearBtn').style.display = 'block';
+  
+  renderWordList();
+}
+
+// -----------------------------
+// 필터 초기화 (목록 닫기)
+// -----------------------------
+function clearFilter() {
+  currentFilter = null;
+  currentDisplayWords = [];
+  
+  // 알파벳 버튼 활성화 해제
+  document.querySelectorAll('.alphabet-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // 필터 표시 숨기기
+  document.getElementById('currentFilter').style.display = 'none';
+  
+  // 목록 닫기 버튼 숨기기
+  document.getElementById('clearBtn').style.display = 'none';
+  
+  renderWordList();
+}
+
+// -----------------------------
+// 단어 목록 렌더링
+// -----------------------------
+function renderWordList() {
   let html = '';
-  sortedLetters.forEach(letter => {
-    const words = grouped[letter];
-    html += `
-      <div class="alphabet-section">
-        <div class="alphabet-header" onclick="toggleSection('${letter}')">
-          <span>${letter} (${words.length}개)</span>
-          <span class="arrow">▼</span>
-        </div>
-        <div class="alphabet-content" id="section-${letter}">
-    `;
-    
-    words.forEach(word => {
+  
+  if (currentDisplayWords.length === 0) {
+    // 단어가 없을 때 안내 메시지
+    html = '<p style="text-align: center; color: #999; padding: 40px;">알파벳을 선택하여 단어를 확인하세요</p>';
+  } else {
+    currentDisplayWords.forEach(word => {
       const isBookmarked = bookmarkedWords.has(word.word);
       const bookmarkClass = isBookmarked ? 'active' : '';
       const bookmarkText = isBookmarked ? '⭐' : '☆';
@@ -347,7 +455,7 @@ function renderAccordion() {
         <div class="word-item" id="word-${word.originalIndex}">
           <div class="word-info">
             <div class="word-number">#${word.originalIndex + 1}</div>
-            <div class="word-name ${wordNameClass}" onclick="${meaningHidden ? `toggleIndividualMeaning(${word.originalIndex})` : ''}">${word.word}</div>
+            <div class="word-name ${wordNameClass}" ${meaningHidden ? `onclick="toggleIndividualMeaning(${word.originalIndex})"` : ''}>${word.word}</div>
             <div class="word-meaning ${meaningClass}" id="meaning-${word.originalIndex}">${word.meaning.join(', ')}</div>
           </div>
           <div class="word-actions">
@@ -359,42 +467,9 @@ function renderAccordion() {
         </div>
       `;
     });
-    
-    html += `
-        </div>
-      </div>
-    `;
-  });
+  }
   
-  document.getElementById('accordionArea').innerHTML = html;
-}
-
-// -----------------------------
-// 섹션 토글
-// -----------------------------
-function toggleSection(letter) {
-  const content = document.getElementById(`section-${letter}`);
-  const header = content.previousElementSibling;
-  
-  content.classList.toggle('active');
-  header.classList.toggle('active');
-}
-
-// -----------------------------
-// 전체 펼치기/접기
-// -----------------------------
-function expandAll() {
-  document.querySelectorAll('.alphabet-content').forEach(el => {
-    el.classList.add('active');
-    el.previousElementSibling.classList.add('active');
-  });
-}
-
-function collapseAll() {
-  document.querySelectorAll('.alphabet-content').forEach(el => {
-    el.classList.remove('active');
-    el.previousElementSibling.classList.remove('active');
-  });
+  document.getElementById('wordList').innerHTML = html;
 }
 
 // -----------------------------
@@ -413,7 +488,7 @@ function speakWord(word) {
 // 순차 재생
 // -----------------------------
 function playAll() {
-  if (WORDS.length === 0) {
+  if (currentDisplayWords.length === 0) {
     alert('단어가 없습니다.');
     return;
   }
@@ -438,15 +513,15 @@ function playNext() {
     return;
   }
   
-  if (currentPlayIndex >= WORDS.length) {
+  if (currentPlayIndex >= currentDisplayWords.length) {
     stopPlay();
     return;
   }
   
-  const currentWord = WORDS[currentPlayIndex];
+  const currentWord = currentDisplayWords[currentPlayIndex];
   const word = currentWord.word;
   const meaning = currentWord.meaning.join(', ');
-  const wordEl = document.getElementById(`word-${currentPlayIndex}`);
+  const wordEl = document.getElementById(`word-${currentWord.originalIndex}`);
   
   // 이전 하이라이트 제거
   document.querySelectorAll('.word-item').forEach(el => {
@@ -456,6 +531,7 @@ function playNext() {
   // 현재 하이라이트
   if (wordEl) {
     wordEl.classList.add('playing');
+    wordEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
   
   // 발음
@@ -573,29 +649,12 @@ function toggleMeaningDisplay() {
   const btn = document.getElementById('toggleMeaningBtn');
   
   if (meaningHidden) {
-    btn.textContent = '뜻 보이기';
-    // 모든 뜻 숨기기
-    document.querySelectorAll('.word-meaning').forEach(el => {
-      el.classList.add('hidden');
-    });
-    // 모든 단어를 클릭 가능하게
-    document.querySelectorAll('.word-name').forEach(el => {
-      el.classList.add('clickable');
-      const wordId = el.parentElement.parentElement.id.replace('word-', '');
-      el.setAttribute('onclick', `toggleIndividualMeaning(${wordId})`);
-    });
+    btn.textContent = '👁️ 뜻 보이기';
   } else {
-    btn.textContent = '뜻 숨기기';
-    // 모든 뜻 보이기
-    document.querySelectorAll('.word-meaning').forEach(el => {
-      el.classList.remove('hidden');
-    });
-    // 클릭 기능 제거
-    document.querySelectorAll('.word-name').forEach(el => {
-      el.classList.remove('clickable');
-      el.removeAttribute('onclick');
-    });
+    btn.textContent = '👁️ 뜻 숨기기';
   }
+  
+  renderWordList();
 }
 
 // -----------------------------
