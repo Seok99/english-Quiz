@@ -11,14 +11,95 @@
       font-family: Arial, sans-serif;
       padding: 20px;
       background: #f7f7f7;
+      margin: 0;
+    }
+    .main-wrapper {
+      display: flex;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-left: 400px;
+      padding-right: 50px;
     }
     .container {
-      max-width: 500px;
-      margin: auto;
+      flex: 1;
+      max-width: 600px;
       background: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .wrong-words-panel {
+      width: 350px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      position: sticky;
+      top: 20px;
+    }
+    .wrong-words-panel h3 {
+      margin-top: 0;
+      color: #dc3545;
+      border-bottom: 2px solid #dc3545;
+      padding-bottom: 10px;
+    }
+    .wrong-word-item {
+      background: #fff5f5;
+      border: 1px solid #ffcccc;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .wrong-word-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+    .wrong-word-english {
+      font-weight: bold;
+      font-size: 18px;
+      color: #333;
+      flex: 1;
+      min-width: 0;
+    }
+    .wrong-word-korean {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .wrong-word-user-answer {
+      color: #dc3545;
+      font-size: 13px;
+      font-style: italic;
+    }
+    .wrong-bookmark-btn {
+      background: #ffc107;
+      color: white;
+      border: none;
+      padding: 3px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      width: 45px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .wrong-bookmark-btn:hover {
+      background: #e0a800;
+    }
+    .wrong-bookmark-btn.active {
+      background: #ff9800;
+    }
+    .empty-message {
+      text-align: center;
+      color: #999;
+      padding: 40px 20px;
+      font-size: 14px;
     }
     input, button, select {
       font-size: 18px;
@@ -174,200 +255,225 @@
       color: #666;
       font-weight: bold;
     }
+    
+    @media (max-width: 1024px) {
+      .main-wrapper {
+        flex-direction: column;
+        padding-left: 20px;
+      }
+      .wrong-words-panel {
+        width: 100%;
+        max-height: none;
+        position: relative;
+        top: 0;
+      }
+      .container {
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>📘 나만의 영어단어 퀴즈</h2>
+<div class="main-wrapper">
+  <div class="container">
+    <h2>📘 나만의 영어단어 퀴즈</h2>
 
-  <!-- 네비게이션 메뉴 -->
-  <div class="nav-menu">
-    <a href="wordlist.html" class="nav-btn">📚 전체 단어</a>
-    <a href="bookmarks.html" class="nav-btn">⭐ 즐겨찾기</a>
-    <a href="index.html" class="nav-btn active">🎯 퀴즈</a>
-  </div>
+    <!-- 네비게이션 메뉴 -->
+    <div class="nav-menu">
+      <a href="wordlist.html" class="nav-btn">📚 전체 단어</a>
+      <a href="bookmarks.html" class="nav-btn">⭐ 즐겨찾기</a>
+      <a href="index.html" class="nav-btn active">🎯 퀴즈</a>
+    </div>
 
-  <!-- 모드 선택 버튼 -->
-  <div class="mode-selector">
-    <button class="mode-btn active" onclick="selectMode('quiz')" id="quizModeBtn">
-      🎯 퀴즈 모드
-    </button>
-    <button class="mode-btn" onclick="selectMode('test')" id="testModeBtn">
-      📝 시험지 모드
-    </button>
-  </div>
+    <!-- 모드 선택 버튼 -->
+    <div class="mode-selector">
+      <button class="mode-btn active" onclick="selectMode('quiz')" id="quizModeBtn">
+        🎯 퀴즈 모드
+      </button>
+      <button class="mode-btn" onclick="selectMode('test')" id="testModeBtn">
+        📝 시험지 모드
+      </button>
+    </div>
 
-  <!-- 퀴즈 모드 설정 -->
-  <div id="quizSettings">
-    <label>문제 유형 선택:</label>
-    <select id="quizMode">
-      <option value="mixed">혼합 (영어+한글)</option>
-      <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
-      <option value="english">영어 단어만 맞추기 (한글→영어)</option>
-    </select>
+    <!-- 퀴즈 모드 설정 -->
+    <div id="quizSettings">
+      <label>문제 유형 선택:</label>
+      <select id="quizMode">
+        <option value="mixed">혼합 (영어+한글)</option>
+        <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
+        <option value="english">영어 단어만 맞추기 (한글→영어)</option>
+      </select>
 
-    <label>단어 선택 방식:</label>
-    <select id="quizSelectMode" onchange="changeQuizSelectMode()">
-      <option value="range">범위로 선택</option>
-      <option value="alphabet">알파벳으로 선택</option>
-    </select>
+      <label>단어 선택 방식:</label>
+      <select id="quizSelectMode" onchange="changeQuizSelectMode()">
+        <option value="range">범위로 선택</option>
+        <option value="alphabet">알파벳으로 선택</option>
+      </select>
 
-    <!-- 범위 선택 -->
-    <div id="quizRangeSelect">
-      <label>단어 범위 선택:</label>
-      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-        <input type="number" id="rangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
-        <span>~</span>
-        <input type="number" id="rangeEnd" placeholder="끝" min="1" style="width: 80px;" />
-        <button onclick="setFullRange()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+      <!-- 범위 선택 -->
+      <div id="quizRangeSelect">
+        <label>단어 범위 선택:</label>
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+          <input type="number" id="rangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
+          <span>~</span>
+          <input type="number" id="rangeEnd" placeholder="끝" min="1" style="width: 80px;" />
+          <button onclick="setFullRange()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+        </div>
+
+        <label>문제 개수 선택 (최대 50):</label>
+        <select id="quizCount">
+          <option value="10">10개</option>
+          <option value="20">20개</option>
+          <option value="30">30개</option>
+          <option value="40">40개</option>
+          <option value="50">50개</option>
+        </select>
       </div>
 
-      <label>문제 개수 선택 (최대 50):</label>
-      <select id="quizCount">
-        <option value="10">10개</option>
-        <option value="20">20개</option>
-        <option value="30">30개</option>
-        <option value="40">40개</option>
-        <option value="50">50개</option>
-      </select>
-    </div>
-
-    <!-- 알파벳 선택 -->
-    <div id="quizAlphabetSelect" style="display:none;">
-      <label>시작 알파벳 선택:</label>
-      <select id="alphabetFilter" style="margin-top: 10px;">
-        <option value="">선택하세요</option>
-        <option value="a">A</option>
-        <option value="b">B</option>
-        <option value="c">C</option>
-        <option value="d">D</option>
-        <option value="e">E</option>
-        <option value="f">F</option>
-        <option value="g">G</option>
-        <option value="h">H</option>
-        <option value="i">I</option>
-        <option value="j">J</option>
-        <option value="k">K</option>
-        <option value="l">L</option>
-        <option value="m">M</option>
-        <option value="n">N</option>
-        <option value="o">O</option>
-        <option value="p">P</option>
-        <option value="q">Q</option>
-        <option value="r">R</option>
-        <option value="s">S</option>
-        <option value="t">T</option>
-        <option value="u">U</option>
-        <option value="v">V</option>
-        <option value="w">W</option>
-        <option value="x">X</option>
-        <option value="y">Y</option>
-        <option value="z">Z</option>
-      </select>
-      <div id="alphabetCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
-    </div>
-
-    <button onclick="startQuiz()">퀴즈 시작</button>
-  </div>
-
-  <!-- 시험지 모드 설정 -->
-  <div id="testSettings" style="display:none;">
-    <label>시험지 유형 선택:</label>
-    <select id="testMode">
-      <option value="mixed">혼합 (영어+한글)</option>
-      <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
-      <option value="english">영어 단어만 맞추기 (한글→영어)</option>
-    </select>
-
-    <label>단어 선택 방식:</label>
-    <select id="testSelectMode" onchange="changeTestSelectMode()">
-      <option value="range">범위로 선택</option>
-      <option value="alphabet">알파벳으로 선택</option>
-    </select>
-
-    <!-- 범위 선택 -->
-    <div id="testRangeSelect">
-      <label>단어 범위 선택:</label>
-      <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
-        <input type="number" id="testRangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
-        <span>~</span>
-        <input type="number" id="testRangeEnd" placeholder="끝" min="1" style="width: 80px;" />
-        <button onclick="setFullRangeTest()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+      <!-- 알파벳 선택 -->
+      <div id="quizAlphabetSelect" style="display:none;">
+        <label>시작 알파벳 선택:</label>
+        <select id="alphabetFilter" style="margin-top: 10px;">
+          <option value="">선택하세요</option>
+          <option value="a">A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+          <option value="e">E</option>
+          <option value="f">F</option>
+          <option value="g">G</option>
+          <option value="h">H</option>
+          <option value="i">I</option>
+          <option value="j">J</option>
+          <option value="k">K</option>
+          <option value="l">L</option>
+          <option value="m">M</option>
+          <option value="n">N</option>
+          <option value="o">O</option>
+          <option value="p">P</option>
+          <option value="q">Q</option>
+          <option value="r">R</option>
+          <option value="s">S</option>
+          <option value="t">T</option>
+          <option value="u">U</option>
+          <option value="v">V</option>
+          <option value="w">W</option>
+          <option value="x">X</option>
+          <option value="y">Y</option>
+          <option value="z">Z</option>
+        </select>
+        <div id="alphabetCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
       </div>
 
-      <label>문제 개수 선택:</label>
-      <select id="testCount">
-        <option value="20">20개</option>
-        <option value="30">30개</option>
-        <option value="40">40개</option>
-        <option value="50">50개</option>
-      </select>
+      <button onclick="startQuiz()">퀴즈 시작</button>
     </div>
 
-    <!-- 알파벳 선택 -->
-    <div id="testAlphabetSelect" style="display:none;">
-      <label>시작 알파벳 선택:</label>
-      <select id="testAlphabetFilter" onchange="updateTestAlphabetCount()" style="margin-top: 10px;">
-        <option value="">선택하세요</option>
-        <option value="a">A</option>
-        <option value="b">B</option>
-        <option value="c">C</option>
-        <option value="d">D</option>
-        <option value="e">E</option>
-        <option value="f">F</option>
-        <option value="g">G</option>
-        <option value="h">H</option>
-        <option value="i">I</option>
-        <option value="j">J</option>
-        <option value="k">K</option>
-        <option value="l">L</option>
-        <option value="m">M</option>
-        <option value="n">N</option>
-        <option value="o">O</option>
-        <option value="p">P</option>
-        <option value="q">Q</option>
-        <option value="r">R</option>
-        <option value="s">S</option>
-        <option value="t">T</option>
-        <option value="u">U</option>
-        <option value="v">V</option>
-        <option value="w">W</option>
-        <option value="x">X</option>
-        <option value="y">Y</option>
-        <option value="z">Z</option>
+    <!-- 시험지 모드 설정 -->
+    <div id="testSettings" style="display:none;">
+      <label>시험지 유형 선택:</label>
+      <select id="testMode">
+        <option value="mixed">혼합 (영어+한글)</option>
+        <option value="korean">한글 뜻만 맞추기 (영어→한글)</option>
+        <option value="english">영어 단어만 맞추기 (한글→영어)</option>
       </select>
-      <div id="testAlphabetCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+
+      <label>단어 선택 방식:</label>
+      <select id="testSelectMode" onchange="changeTestSelectMode()">
+        <option value="range">범위로 선택</option>
+        <option value="alphabet">알파벳으로 선택</option>
+      </select>
+
+      <!-- 범위 선택 -->
+      <div id="testRangeSelect">
+        <label>단어 범위 선택:</label>
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+          <input type="number" id="testRangeStart" placeholder="시작" min="1" style="width: 80px;" value="1" />
+          <span>~</span>
+          <input type="number" id="testRangeEnd" placeholder="끝" min="1" style="width: 80px;" />
+          <button onclick="setFullRangeTest()" style="width: auto; padding: 10px 15px; margin: 0;">전체</button>
+        </div>
+
+        <label>문제 개수 선택:</label>
+        <select id="testCount">
+          <option value="20">20개</option>
+          <option value="30">30개</option>
+          <option value="40">40개</option>
+          <option value="50">50개</option>
+        </select>
+      </div>
+
+      <!-- 알파벳 선택 -->
+      <div id="testAlphabetSelect" style="display:none;">
+        <label>시작 알파벳 선택:</label>
+        <select id="testAlphabetFilter" onchange="updateTestAlphabetCount()" style="margin-top: 10px;">
+          <option value="">선택하세요</option>
+          <option value="a">A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+          <option value="e">E</option>
+          <option value="f">F</option>
+          <option value="g">G</option>
+          <option value="h">H</option>
+          <option value="i">I</option>
+          <option value="j">J</option>
+          <option value="k">K</option>
+          <option value="l">L</option>
+          <option value="m">M</option>
+          <option value="n">N</option>
+          <option value="o">O</option>
+          <option value="p">P</option>
+          <option value="q">Q</option>
+          <option value="r">R</option>
+          <option value="s">S</option>
+          <option value="t">T</option>
+          <option value="u">U</option>
+          <option value="v">V</option>
+          <option value="w">W</option>
+          <option value="x">X</option>
+          <option value="y">Y</option>
+          <option value="z">Z</option>
+        </select>
+        <div id="testAlphabetCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+      </div>
+
+      <button onclick="startTest()">시험지 생성</button>
     </div>
 
-    <button onclick="startTest()">시험지 생성</button>
+    <!-- 퀴즈 영역 -->
+    <div id="quizArea" style="display:none;">
+      <div class="progress" id="progress"></div>
+      <div class="question" id="question"></div>
+      <button onclick="speakWord()" id="speakBtn" style="background: #28a745; margin-bottom: 10px;">
+        🔊 발음 듣기
+      </button>
+      <input id="answerInput" placeholder="정답 입력..." onkeypress="handleKeyPress(event)" />
+      <button onclick="checkAnswer()">제출</button>
+      <div class="result" id="result"></div>
+      <button onclick="nextQuestion()" id="nextBtn" style="display:none;">다음 문제</button>
+    </div>
+
+    <!-- 시험지 영역 -->
+    <div id="testArea" style="display:none;">
+      <h3>📝 영어 단어 시험지</h3>
+      <div id="testTableContainer"></div>
+      <button onclick="submitTest()" id="submitTestBtn" style="margin-top: 20px;">채점하기</button>
+      <div id="scoreArea" style="display:none;">
+        <div class="score-display" id="scoreDisplay"></div>
+        <button onclick="resetTest()">다시 풀기</button>
+        <button onclick="selectMode('test')">새 시험지</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 퀴즈 영역 -->
-  <div id="quizArea" style="display:none;">
-    <div class="progress" id="progress"></div>
-    <div class="question" id="question"></div>
-    <button onclick="speakWord()" id="speakBtn" style="background: #28a745; margin-bottom: 10px;">
-      🔊 발음 듣기
-    </button>
-    <button onclick="toggleBookmark()" id="bookmarkBtn" style="background: #ffc107; margin-bottom: 10px;">
-      ⭐ 즐겨찾기 추가
-    </button>
-    <input id="answerInput" placeholder="정답 입력..." onkeypress="handleKeyPress(event)" />
-    <button onclick="checkAnswer()">제출</button>
-    <div class="result" id="result"></div>
-    <button onclick="nextQuestion()" id="nextBtn" style="display:none;">다음 문제</button>
-  </div>
-
-  <!-- 시험지 영역 -->
-  <div id="testArea" style="display:none;">
-    <h3>📝 영어 단어 시험지</h3>
-    <div id="testTableContainer"></div>
-    <button onclick="submitTest()" id="submitTestBtn" style="margin-top: 20px;">채점하기</button>
-    <div id="scoreArea" style="display:none;">
-      <div class="score-display" id="scoreDisplay"></div>
-      <button onclick="resetTest()">다시 풀기</button>
-      <button onclick="selectMode('test')">새 시험지</button>
+  <!-- 틀린 단어 패널 -->
+  <div class="wrong-words-panel" id="wrongWordsPanel">
+    <h3>❌ 틀린 단어</h3>
+    <div id="wrongWordsList">
+      <div class="empty-message">
+        퀴즈를 시작하면<br>틀린 단어가 여기에 표시됩니다
+      </div>
     </div>
   </div>
 </div>
@@ -408,6 +514,7 @@ let bookmarkedWords = new Set();
 let quizCorrectCount = 0;
 let quizWrongCount = 0;
 let isAnswerChecked = false;
+let wrongWords = [];
 
 // -----------------------------
 // 즐겨찾기 관리
@@ -423,36 +530,54 @@ function saveBookmarks() {
   localStorage.setItem('bookmarkedWords', JSON.stringify([...bookmarkedWords]));
 }
 
-function toggleBookmark() {
-  if (!currentQuiz) return;
-  
-  const word = currentQuiz.originalWord;
-  
+function toggleWrongWordBookmark(word, index) {
   if (bookmarkedWords.has(word)) {
     bookmarkedWords.delete(word);
-    alert(`"${word}" 즐겨찾기에서 제거했습니다.`);
   } else {
     bookmarkedWords.add(word);
-    alert(`"${word}" 즐겨찾기에 추가했습니다!`);
   }
   
   saveBookmarks();
-  updateBookmarkButton();
-}
-
-function updateBookmarkButton() {
-  const btn = document.getElementById("bookmarkBtn");
-  if (bookmarkedWords.has(currentQuiz.originalWord)) {
-    btn.textContent = "⭐ 즐겨찾기 제거";
-    btn.style.background = "#ff9800";
-  } else {
-    btn.textContent = "⭐ 즐겨찾기 추가";
-    btn.style.background = "#ffc107";
-  }
+  updateWrongWordsList();
 }
 
 // 페이지 로드 시 즐겨찾기 불러오기
 loadBookmarks();
+
+// -----------------------------
+// 틀린 단어 목록 업데이트
+// -----------------------------
+function updateWrongWordsList() {
+  const listEl = document.getElementById('wrongWordsList');
+  
+  if (wrongWords.length === 0) {
+    listEl.innerHTML = '<div class="empty-message">퀴즈를 시작하면<br>틀린 단어가 여기에 표시됩니다</div>';
+    return;
+  }
+  
+  let html = '';
+  wrongWords.forEach((item, index) => {
+    const isBookmarked = bookmarkedWords.has(item.word);
+    const bookmarkClass = isBookmarked ? 'active' : '';
+    const bookmarkText = isBookmarked ? '⭐ 제거' : '☆ 추가';
+    
+    html += `
+      <div class="wrong-word-item">
+        <div class="wrong-word-header">
+          <div class="wrong-word-english">${item.word}</div>
+          <button class="wrong-bookmark-btn ${bookmarkClass}" 
+                  onclick="toggleWrongWordBookmark('${item.word}', ${index})">
+            ${bookmarkText}
+          </button>
+        </div>
+        <div class="wrong-word-korean">정답: ${item.correctAnswer}</div>
+        <div class="wrong-word-user-answer">입력: ${item.userAnswer || '(무응답)'}</div>
+      </div>
+    `;
+  });
+  
+  listEl.innerHTML = html;
+}
 
 // -----------------------------
 // 선택 모드 변경
@@ -551,6 +676,10 @@ function selectMode(mode) {
     document.getElementById('testSettings').style.display = 'none';
     document.getElementById('quizArea').style.display = 'none';
     document.getElementById('testArea').style.display = 'none';
+    
+    // 틀린 단어 패널 초기화
+    wrongWords = [];
+    updateWrongWordsList();
   } else {
     document.getElementById('testModeBtn').classList.add('active');
     document.getElementById('quizSettings').style.display = 'none';
@@ -656,9 +785,11 @@ function startQuiz() {
   currentIndex = 0;
   quizCorrectCount = 0;
   quizWrongCount = 0;
+  wrongWords = [];
   document.getElementById("quizArea").style.display = "block";
   document.getElementById("result").innerHTML = "";
   document.getElementById("nextBtn").style.display = "none";
+  updateWrongWordsList();
   showQuestion();
 }
 
@@ -676,9 +807,6 @@ function showQuestion() {
   document.getElementById("result").innerHTML = "";
   document.getElementById("nextBtn").style.display = "none";
   document.getElementById("answerInput").focus();
-  
-  // 즐겨찾기 버튼 상태 업데이트
-  updateBookmarkButton();
 }
 
 // -----------------------------
@@ -727,6 +855,15 @@ function checkAnswer() {
       입력한 답: ${user}<br>
       정답: ${currentQuiz.answerList.join(", ")}<br>
       전체 뜻: ${currentQuiz.fullMeaning.join(", ")}`;
+    
+    // 틀린 단어 목록에 추가
+    wrongWords.push({
+      word: currentQuiz.originalWord,
+      correctAnswer: currentQuiz.answerList.join(", "),
+      userAnswer: user,
+      fullMeaning: currentQuiz.fullMeaning.join(", ")
+    });
+    updateWrongWordsList();
   }
 
   // 답변 체크 완료 표시
