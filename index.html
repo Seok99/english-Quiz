@@ -18,7 +18,7 @@
       gap: 20px;
       max-width: 1400px;
       margin: 0 auto;
-      padding-left: 400px;
+      padding-left: 200px;
       padding-right: 50px;
     }
     .container {
@@ -571,6 +571,7 @@ function updateWrongWordsList() {
           </button>
         </div>
         <div class="wrong-word-korean">정답: ${item.correctAnswer}</div>
+        <div class="wrong-word-korean">전체 뜻: ${item.fullMeaning}</div>
         <div class="wrong-word-user-answer">입력: ${item.userAnswer || '(무응답)'}</div>
       </div>
     `;
