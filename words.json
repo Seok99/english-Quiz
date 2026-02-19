@@ -798,5 +798,19 @@
   {"word":"you","meaning":["너"]},
   {"word":"young","meaning":["젊은"]},
   {"word":"zebra","meaning":["얼룩말"]},
-  {"word":"zoo","meaning":["동물원"]}
+  {"word":"zoo","meaning":["동물원"]},
+  {"word":"elderly person","meaning":["노인"]},
+  {"word":"middle age","meaning":["중년"]},
+  {"word":"adolescent","meaning":["청소년"]},
+  {"word":"pregnant woman","meaning":["임산부"]},
+  {"word":"preschooler","meaning":["미취학 아동"]},
+  {"word":"paternal grandfather","meaning":["친할아버지"]},
+  {"word":"paternal grandmother","meaning":["친할머니"]},
+  {"word":"maternal grandfather","meaning":["외할아버지"]},
+  {"word":"maternal grandmother","meaning":["외할머니"]},
+  {"word":"elder sister","meaning":["언니","누나"]},
+  {"word":"brother-in-law","meaning":["형부","매부","매형"]},
+  {"word":"elder brother","meaning":["오빠","형"]},
+  {"word":"sister-in-law","meaning":["새언니","형수"]},
+  {"word":"younger brother","meaning":["남동생"]}
 ]
