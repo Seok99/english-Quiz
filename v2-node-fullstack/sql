@@ -1,0 +1,20 @@
+--DATABASE 구성
+CREATE DATABASE english_quiz;
+USE english_quiz;
+CREATE TABLE Member (
+	member_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id varchar(255) not null,
+    password varchar(255) not null,
+    email varchar(255) not null unique,
+    created_at datetime default current_timestamp
+);
+CREATE TABLE Word (
+	word_id int auto_increment PRIMARY KEY,
+    english_word varchar(255) not null,
+    korean_meaning varchar(255) not null,
+    created_by int null,
+    created_at datetime default current_timestamp,
+    FOREIGN KEY (created_by) REFERENCES Member(member_id)
+    ON DELETE CASCADE
+);
+show databases;
