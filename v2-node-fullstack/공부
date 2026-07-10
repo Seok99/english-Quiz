@@ -1,3 +1,6 @@
 brew services start mysql - Mac실행시 자동 sql실행
 mysql.server start - 지금만 sql실행
 mysql -u root -p - sql접속
+
+brew services stop mysql -- sql종료
+brew services start mysql -- sql접속
