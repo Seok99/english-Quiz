@@ -1,2 +1,4 @@
 1. Figma설계
 2. DB설계
+
+로그인 방식 - JWT방식 / Google Authenticator 사용
