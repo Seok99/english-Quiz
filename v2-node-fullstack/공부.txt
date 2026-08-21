@@ -4,3 +4,5 @@ mysql -u root -p - sql접속
 
 brew services stop mysql -- sql종료
 brew services start mysql -- sql접속
+
+const bcrypt = require('bcrypt') == bcrypt라는 암호화 라이브러리를 가져오는 것
