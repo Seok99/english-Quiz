@@ -5,5 +5,6 @@ const memberController = require('../controllers/memberController');
 router.post('/register', memberController.register);
 router.get('/otp-setup/:memberId', memberController.getOtpSetup);
 router.post('/login', memberController.login);
+router.post('/verify-otp', memberController.verifyOtp);
 
 module.exports = router;

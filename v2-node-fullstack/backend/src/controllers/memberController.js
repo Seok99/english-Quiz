@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { generateSecret, generateURI } = require('otplib');
+const { generateSecret, generateURI, verify } = require('otplib');
 const memberService = require('../services/memberService');
 const qrcode = require('qrcode');
 const { authPlugins } = require('mysql2');
@@ -109,4 +109,45 @@ async function login(req, res){
     }
 }
 
-module.exports = {register, getOtpSetup, login};
+async function verifyOtp(req, res) {
+    try {
+        const { tempToken, otpCode } = req.body;
+
+        //1. 필수값 체크
+        if(!tempToken || !otpCode) {
+            return res.status(400).json({ success : false, message: 'tempToken과 otpCode를 모두 입력해주세요.'});
+        }
+        //2. tempToken검증
+        let decoded;
+        try{
+            decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ success: false, message: '유효하지 않거나 만료된 토큰입니다.'});
+        }
+        //3. 토큰의 stage가 otp_pending이 맞는지 확인
+        if(decoded.stage !== 'otp_pending') {
+            return res.status(403).json({ success: false, message: '잘못된 접근입니다.'});
+        }
+        //4. 회원조회
+        const member = await memberService.findById(decoded.memberId);
+        if(!member){
+            return res.status(404).json({ success: false, message: '존재하지 않는 회원입니다.'});
+        }
+        //5. OTP코드 검증
+        const isValid = await verify({ secret: member.otp_secret, token: otpCode});
+        if(!isValid){
+            return res.status(401).json({ success: false, message: 'OTP코드가 일치하지 않습니다.'});
+        }
+        //6. 최종로그인 JWT발급
+        const accessToken = jwt.sign(
+            { memberId: member.member_id, userid: member.user_id, stage: 'authenticated'},
+            process.env.JWT_SECRET,
+            { expiresIn: '1d'}
+        );
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.'});
+    }
+}
+
+module.exports = {register, getOtpSetup, login, verifyOtp};
