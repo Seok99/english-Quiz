@@ -111,6 +111,7 @@ async function login(req, res){
 
 async function verifyOtp(req, res) {
     try {
+
         const { tempToken, otpCode } = req.body;
 
         //1. 필수값 체크
@@ -122,28 +123,49 @@ async function verifyOtp(req, res) {
         try{
             decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
         } catch (err) {
+            console.log('[2-실패]', err.message);
             return res.status(401).json({ success: false, message: '유효하지 않거나 만료된 토큰입니다.'});
         }
+
         //3. 토큰의 stage가 otp_pending이 맞는지 확인
         if(decoded.stage !== 'otp_pending') {
             return res.status(403).json({ success: false, message: '잘못된 접근입니다.'});
         }
+
         //4. 회원조회
         const member = await memberService.findById(decoded.memberId);
+
         if(!member){
             return res.status(404).json({ success: false, message: '존재하지 않는 회원입니다.'});
         }
         //5. OTP코드 검증
+        /*
         const isValid = await verify({ secret: member.otp_secret, token: otpCode});
         if(!isValid){
             return res.status(401).json({ success: false, message: 'OTP코드가 일치하지 않습니다.'});
         }
+        */
+
+       const result = await verify({ secret: member.otp_secret, token: otpCode});
+       
+
+       if ( !result.valid){
+        return res.status(401).json({ success: false, message: 'OTP코드가 일치하지 않습니다.'});
+       }
+
         //6. 최종로그인 JWT발급
         const accessToken = jwt.sign(
             { memberId: member.member_id, userid: member.user_id, stage: 'authenticated'},
             process.env.JWT_SECRET,
             { expiresIn: '1d'}
         );
+
+        res.status(200).json({
+            success: true,
+            message: '로그인 성공',
+            accessToken
+        });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: '서버 오류가 발생했습니다.'});
