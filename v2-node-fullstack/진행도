@@ -1,0 +1,58 @@
+## 목적
+백엔드 역량 중심 포트폴리오용 영어 퀴즈 웹앱. 협업 방식처럼 진행 중이지만 혼자 개발.
+프론트는 최소한으로만 구성 예정, 백엔드가 메인.
+
+## 기술 스택
+- 에디터: VSCode
+- 백엔드: Node.js + Express
+- DB: MySQL, mysql2 패키지로 직접 쿼리 작성 (ORM 안 씀, JDBC 스타일)
+- 인증: bcrypt(비번 해싱) + otplib(TOTP, Google Authenticator 연동) + jsonwebtoken(JWT)
+- 프론트: React + Vite (아직 미착수)
+- 배포 예정: Raspberry Pi 4
+- 레포 구조: 모노레포, backend/ frontend/ 폴더 분리
+
+## 폴더 구조 (backend)
+backend/
+├── src/
+│   ├── config/db.js          ← mysql2 커넥션 풀
+│   ├── routes/memberRoutes.js
+│   ├── controllers/memberController.js
+│   ├── services/memberService.js
+│   └── middlewares/authMiddleware.js
+├── server.js
+├── .env
+
+## DB 스키마
+- Member: member_id(PK), user_id, password(해시), email, created_at, otp_secret
+- Word: word_id(PK), english_word, korean_meaning, created_by(FK→member_id, nullable, NULL=시스템 기본단어), created_at (CASCADE delete)
+
+## 완료된 API (Member 인증 4종)
+- POST /api/members/register — 회원가입, bcrypt 해싱 + otp_secret 생성
+- GET /api/members/otp-setup/:memberId — QR코드(base64) 발급
+- POST /api/members/login — id/pw 검증 → 임시 tempToken(5분, stage: otp_pending) 발급
+- POST /api/members/verify-otp — OTP 코드 검증 → 최종 accessToken(1일, stage: authenticated) 발급
+→ 전부 Thunder Client로 테스트 완료, 정상 동작 확인함
+
+## 방금 완성한 것
+src/middlewares/authMiddleware.js — JWT 인증 미들웨어.
+Authorization: Bearer {accessToken} 헤더 검증, stage가 'authenticated'인지 확인,
+통과하면 req.member에 디코딩된 정보(memberId, userid 등) 넣어주고 next() 호출.
+아직 실제 보호 라우트에는 적용 안 해봄 (테스트 전).
+
+## 알아둬야 할 이슈/버전 특이사항
+- otplib v13은 이전 버전(authenticator 객체 방식)과 API가 완전히 다름.
+  - const { generateSecret, generateURI, verify } = require('otplib') 형태로 import
+  - generateURI({ issuer, label, secret })
+  - verify({ secret, token })는 boolean이 아니라 { valid: true/false, ... } 객체 반환하니
+    if (!result.valid) 형태로 체크해야 함 (이거 놓쳐서 버그 났었음)
+- dotenv v17+ 는 콘솔에 홍보성 tip 로그를 찍는데 DOTENV_CONFIG_QUIET=true로 끌 수 있음
+
+## 다음 할 일
+Word API 설계 및 제작 (ERD 기준 CRUD).
+단어 등록(POST)은 로그인 필수 → authMiddleware를 여기서 처음 실제 적용해볼 예정.
+아직 API 명세(엔드포인트 목록)는 안 짰음, 여기서부터 시작하면 됨.
+
+## 내가 원하는 진행 방식
+- 코드는 계층 분리(routes/controllers/services) 유지
+- 코드 설명은 한 줄씩 자세하게
+- 다음 단계로 넘어가기 전에 확인 질문 먼저 하고 진행
