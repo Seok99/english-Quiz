@@ -18,3 +18,10 @@ CREATE TABLE Word (
     ON DELETE CASCADE
 );
 show databases;
+
+Word테이블
+word_id PK  
+english_word 영단어 
+korean_meaning 뜻 
+created_by FK → member_id, NULL이면 시스템 기본 단어, 값 있으면 사용자가 만든 단어
+created_at 생성일
