@@ -1,5 +1,6 @@
 const wordService = require('../services/wordService');
 
+//단어 목록 조회
 async function getWord(req, res){
     try{
         const words = await wordService.findAll();
