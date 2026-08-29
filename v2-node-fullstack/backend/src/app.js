@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const memberRoutes = require('./routes/memberRoutes');
+const wordRoutes = require('./routes/wordRoutes');
 //
 const pool = require('./config/db');
 
@@ -10,6 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/members', memberRoutes);
+app.use('/api/words', wordRoutes);
 
 // 테스트용 기본 라우트
 app.get('/', (req, res) => {

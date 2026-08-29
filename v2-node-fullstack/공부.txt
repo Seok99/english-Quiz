@@ -1,46 +1,53 @@
-brew services start mysql - Mac실행시 자동 sql실행
-mysql.server start - 지금만 sql실행
-mysql -u root -p - sql접속
+{ SQL 터미널 명령어
+  brew services start mysql - Mac실행시 자동 sql실행
+  mysql.server start - 지금만 sql실행
+  mysql -u root -p - sql접속
 
-brew services stop mysql -- sql종료
-brew services start mysql -- sql접속
+  brew services stop mysql -- sql종료
+  brew services start mysql -- sql접속                                        }
 
-const bcrypt = require('bcrypt') == bcrypt라는 암호화 라이브러리를 가져오는 것
+{ Thunder Client 테스트 순서
+  1. 회원가입
+  POST http://localhost:5001/api/members/register
+  Body = 
+  {
+    "userid": "test01",
+    "password": "114477",
+    "email": "test@test.com"
+  }
+  2. OTP등록용 QR발급
+  GET http://localhost:5001/api/members/otp-setup/1
+  Body =
+  {
+    "success": true,
+    "qrImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+  }
+  3. 로그인 1단계
+  POST http://localhost:5001/api/members/login
+  Body =
+  {
+    "userid": "test01",
+    "password": "114477"
+  }
+  4. 로그인 2단계
+  POST http://localhost:5001/api/members/verify-otp
+  Body =
+  {
+    "tempToken": "2번에서_받은_tempToken_전체를_그대로_붙여넣기",
+    "otpCode": "Authenticator_앱에_뜨는_6자리_숫자"
+  }}
 
+{백엔드 공부
+  const bcrypt = require('bcrypt') == bcrypt라는 암호화 라이브러리를 가져오는 것
 
+  요청	              매칭되는 라우트	                실행 함수
+  GET /api/words	    router.get('/', ...)	        getWords (전체 목록)
+  GET /api/words/5	  router.get('/:wordId', ...)	  getWordById (5번 단어 하나)
 
-
-
-Thunder Client 테스트 순서
-1. 회원가입
-POST http://localhost:5001/api/members/register
-Body = 
-{
-  "userid": "test01",
-  "password": "114477",
-  "email": "test@test.com"
-}
-
-2. OTP등록용 QR발급
-GET http://localhost:5001/api/members/otp-setup/1
-Body =
-{
-  "success": true,
-  "qrImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
-}
-
-3. 로그인 1단계
-POST http://localhost:5001/api/members/login
-Body =
-{
-  "userid": "test01",
-  "password": "114477"
-}
-
-4. 로그인 2단계
-POST http://localhost:5001/api/members/verify-otp
-Body =
-{
-  "tempToken": "2번에서_받은_tempToken_전체를_그대로_붙여넣기",
-  "otpCode": "Authenticator_앱에_뜨는_6자리_숫자"
+  CRUD와 HTTP Method
+  CRUD	    HTTP Method	          의미
+  Create	    POST	            새 데이터 생성
+  Read	      GET	              데이터 조회
+  Update	    PUT (또는 PATCH)	기존 데이터 수정
+  Delete	    DELETE	          데이터 삭제
 }
