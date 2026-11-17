@@ -5,7 +5,7 @@
 ## 기술 스택
 - 에디터: VSCode
 - 백엔드: Node.js + Express
-- DB: MySQL, mysql2 패키지로 직접 쿼리 작성 (ORM 안 씀, JDBC 스타일)
+- DB: MySQL, mysql2 패키지로 직접 쿼리 작성 (ORM 안 씀, JDBC 스타일) -> supabase
 - 인증: bcrypt(비번 해싱) + otplib(TOTP, Google Authenticator 연동) + jsonwebtoken(JWT)
 - 프론트: React + Vite (아직 미착수)
 - 배포 예정: Raspberry Pi 4
