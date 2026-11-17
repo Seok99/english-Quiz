@@ -4,7 +4,6 @@ const cors = require('cors');
 const memberRoutes = require('./routes/memberRoutes');
 const wordRoutes = require('./routes/wordRoutes');
 //
-const pool = require('./config/db');
 
 const app = express();
 

@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const { generateSecret, generateURI, verify } = require('otplib');
 const memberService = require('../services/memberService');
 const qrcode = require('qrcode');
-const { authPlugins } = require('mysql2');
+//const { authPlugins } = require('mysql2');
 const jwt = require('jsonwebtoken');
 
 async function register(req, res) {
@@ -36,7 +36,7 @@ async function register(req, res) {
             memberId
         });
     } catch (err) {
-        console.error(err);
+        console.error('register 에러:',err);
         res.status(500).json({ success : false, message : '서버 오류가 발생했습니다.'});
     }
 }
