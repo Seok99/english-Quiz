@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { generateSecret, generateURI, verify } = require('otplib');
+const { authenticator } = require('otplib');
 const memberService = require('../services/memberService');
 const qrcode = require('qrcode');
 //const { authPlugins } = require('mysql2');
@@ -24,7 +24,7 @@ async function register(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //OTP Secret 생성
-        const otpSecret = generateSecret();
+        const otpSecret = authenticator.generateSecret();
 
         //DB저장
         const memberId = await memberService.createMember(userid, hashedPassword, email, otpSecret);
@@ -52,11 +52,7 @@ async function getOtpSetup(req, res) {
         }
 
         //2. Otpauth URL생성
-        const otpauthUrl = generateURI({
-            issuer: 'EnglishQuizApp',
-            label: member.user_id,
-            secret: member.otp_secret
-        });
+        const otpauthUrl = authenticator.keyuri(label, issuer, secret);
 
         //3. otpauth URL -> QR코드(base 64) 변환
         const qrImageUrl = await qrcode.toDataURL(otpauthUrl);
@@ -146,7 +142,7 @@ async function verifyOtp(req, res) {
         }
         */
 
-       const result = await verify({ secret: member.otp_secret, token: otpCode});
+       const isValid = authenticator.check(otpCode, member.otp_secret);
        
 
        if ( !result.valid){
