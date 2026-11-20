@@ -145,7 +145,7 @@ async function verifyOtp(req, res) {
        const isValid = authenticator.check(otpCode, member.otp_secret);
        
 
-       if ( !result.valid){
+       if ( !isValid){
         return res.status(401).json({ success: false, message: 'OTP코드가 일치하지 않습니다.'});
        }
 
